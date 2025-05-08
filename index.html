@@ -165,7 +165,7 @@
   <script>
     function checkEntryCode() {
       const pass = document.getElementById("entryPassword").value;
-      if (pass === "1234") {
+      if (pass === "Wisanusorn") {
         document.getElementById("entryGate").style.display = "none";
         document.getElementById("app").style.display = "block";
         startApp(); // เรียกใช้แอปหลัก
@@ -231,7 +231,7 @@
 
     function login() {
       const id = document.getElementById("loginId").value.trim();
-      if (id === "admin") {
+      if (id === "admin123") {
         updateAdminView();
       } else if (accounts[id]) {
         currentId = id;

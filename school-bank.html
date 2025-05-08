@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wisa Bank</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Kanit', sans-serif;
+      margin: 0;
+      background: #f0f8ff;
+    }
+
+
+    #app {
+      max-width: 400px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 128, 255, 0.2);
+      text-align: center;
+    }
+
+    h2 {
+      color: #007BFF;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      display: inline-block;
+      padding: 10px 18px;
+      margin: 6px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #005ecb;
+    }
+
+    div {
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 500px) {
+      #app {
+        margin: 20px;
+        padding: 20px;
+      }
+    }
+
+    #schoolLogo {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 999;
+    }
+
+    #schoolLogo img {
+      width: 80px;
+      height: auto;
+    }
+
+    body {
+      margin: 0;
+      background: #E6F3FF;
+      font-family: 'Kanit', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    #app,
+    #historyPage {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 128, 255, 0.2);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #e6f3ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Kanit', sans-serif;
+    }
+
+    #entryGate {
+      text-align: center;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 128, 255, 0.2);
+    }
+
+    #entryGate input {
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 90%;
+      max-width: 300px;
+      margin-bottom: 10px;
+    }
+
+    #entryGate button {
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="entryGate">
+    <h2>ใส่รหัสผ่านเพื่อเข้าสู่ระบบ</h2>
+    <input type="password" id="entryPassword" placeholder="รหัสผ่าน" />
+    <br><br>
+    <button onclick="checkEntryCode()">ตกลง</button>
+  </div>
+
+  <div id="historyPage"
+      style="display: none; max-width: 400px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0, 128, 255, 0.2); font-family: 'Kanit', sans-serif;">
+      <h2 style="color: #007BFF;">ประวัติการทำรายการ</h2>
+      <ul id="historyList" style="text-align: left; padding-left: 20px;"></ul>
+      <button onclick="backToMain()">ย้อนกลับ</button>
+    </div>
+
+  <div id="schoolLogo">
+    <img src="logo.png" alt="โลโก้โรงเรียนวิศานุสรณ์" />
+  </div>
+
+  <div id="app" style="display: none;"></div>
+
+  <script>
+    function checkEntryCode() {
+      const pass = document.getElementById("entryPassword").value;
+      if (pass === "1234") {
+        document.getElementById("entryGate").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        startApp(); // เรียกใช้แอปหลัก
+      } else {
+        alert("รหัสผ่านไม่ถูกต้อง");
+      }
+    }
+  </script>
+
+  <div id="schoolLogo">
+    <img src="logo.png" alt="โลโก้โรงเรียนวิศานุสรณ์" />
+  </div>
+
+  <script>
+    let accounts = JSON.parse(localStorage.getItem("schoolAccounts") || "{}");
+    let currentId = null;
+
+
+    function save() {
+      localStorage.setItem("schoolAccounts", JSON.stringify(accounts));
+    }
+
+    function startApp() {
+      const container = document.getElementById("app");
+      container.innerHTML = `
+    <h2>Welcome to Wisa Bank</h2>
+    <button onclick="showLogin()">เข้าสู่ระบบ</button>
+    <button onclick="showRegister()">สร้างบัญชีใหม่</button>
+  `;
+    }
+
+    function showLogin() {
+      const container = document.getElementById("app");
+      container.innerHTML = `
+    <h2>เข้าสู่ระบบ</h2>
+    <input type="text" id="loginId" placeholder="รหัสนักเรียน / admin" />
+    <button onclick="login()">เข้าสู่ระบบ</button>
+    <button onclick="startApp()">ย้อนกลับ</button>
+  `;
+    }
+
+    function showRegister() {
+      const container = document.getElementById("app");
+      container.innerHTML = `
+    <h2>สร้างบัญชีใหม่</h2>
+    <input type="text" id="registerId" placeholder="รหัสนักเรียน" />
+    <button onclick="register()">สร้างบัญชี</button>
+    <button onclick="startApp()">ย้อนกลับ</button>
+  `;
+    }
+
+    function register() {
+      const id = document.getElementById("registerId").value.trim();
+      if (id && !accounts[id]) {
+        accounts[id] = { balance: 0, history: [] };
+        save();
+        alert("สร้างบัญชีเรียบร้อยแล้ว");
+        showLogin();
+      } else {
+        alert("รหัสนี้มีอยู่แล้ว หรือไม่ถูกต้อง");
+      }
+    }
+
+    function login() {
+      const id = document.getElementById("loginId").value.trim();
+      if (id === "admin") {
+        updateAdminView();
+      } else if (accounts[id]) {
+        currentId = id;
+        updateStudentView(id);
+      } else {
+        alert("ไม่พบรหัสนี้ในระบบ");
+      }
+    }
+
+    function logout() {
+      currentId = null;
+      startApp();
+    }
+
+    function updateStudentView(id) {
+      const container = document.getElementById("app");
+      container.innerHTML = `
+    <h2>บัญชี: ${id}</h2>
+    <p>ยอดเงินคงเหลือ: ${accounts[id].balance} บาท</p>
+    <input type="number" id="amount" placeholder="จำนวนเงิน" />
+    <button onclick="deposit()">ฝาก</button>
+    <button onclick="withdraw()">ถอน</button>
+    <button onclick="showStudentHistory()">ดูประวัติ</button>
+    <button onclick="logout()">ออกจากระบบ</button>
+  `;
+    }
+
+    function deposit() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      if (amount > 0) {
+        const date = new Date().toLocaleDateString("th-TH");
+        accounts[currentId].balance += amount;
+        accounts[currentId].history.unshift(`ฝาก ${amount} บาท (${date})`);
+        save();
+        updateStudentView(currentId);
+      }
+    }
+
+    function withdraw() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      if (amount > 0 && amount <= accounts[currentId].balance) {
+        const date = new Date().toLocaleDateString("th-TH");
+        accounts[currentId].balance -= amount;
+        accounts[currentId].history.unshift(`ถอน ${amount} บาท (${date})`);
+        save();
+        updateStudentView(currentId);
+      } else {
+        alert("ยอดเงินไม่พอ หรือจำนวนไม่ถูกต้อง");
+      }
+    }
+
+    function updateAdminView() {
+      const container = document.getElementById("app");
+      container.innerHTML = "<h2>แอดมิน - จัดการบัญชี</h2>";
+
+      for (const id in accounts) {
+        const div = document.createElement("div");
+        div.style.marginBottom = "10px";
+        div.innerHTML = `
+  <strong>${id}</strong> - ยอดเงิน: ${accounts[id].balance} บาท
+  <button onclick="showStudentHistory('${id}')">ดูประวัติ</button>
+`;
+        container.appendChild(div);
+      }
+
+      const logoutBtn = document.createElement("button");
+      logoutBtn.textContent = "ออกจากระบบ";
+
+    }
+
+    function showStudentHistory(id) {
+      const studentId = id || currentId;
+      document.getElementById("app").style.display = "none";
+      const historyDiv = document.getElementById("historyPage");
+      const historyList = document.getElementById("historyList");
+      historyList.innerHTML = "";
+
+      const history = accounts[studentId].history;
+      if (history.length === 0) {
+        historyList.innerHTML = "<li>ไม่มีรายการ</li>";
+      } else {
+        history.forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          historyList.appendChild(li);
+        });
+      }
+
+      historyDiv.style.display = "block";
+      const printBtn = document.createElement("button");
+      printBtn.textContent = "พิมพ์ประวัติ";
+      printBtn.onclick = printHistory;
+      historyDiv.appendChild(printBtn);
+      const exportBtn = document.createElement("button");
+      exportBtn.textContent = "ส่งออกเป็น Excel";
+      exportBtn.onclick = exportToExcel;
+      historyDiv.appendChild(exportBtn);
+    }
+
+    function exportToExcel() {
+      const history = accounts[currentId].history;
+      if (history.length === 0) {
+        alert("ไม่มีข้อมูลให้ส่งออก");
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,รายการ\n";
+      history.forEach(item => {
+        csvContent += item + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "ประวัติบัญชี.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function printHistory() {
+      const printContent = document.getElementById("historyPage").innerHTML;
+      const originalContent = document.body.innerHTML;
+
+      document.body.innerHTML = printContent;
+      window.print();
+      document.body.innerHTML = originalContent;
+      location.reload(); // โหลดใหม่เพื่อคืนสภาพ
+    }
+
+    function backToMain() {
+      document.getElementById("historyPage").style.display = "none";
+      document.getElementById("app").style.display = "block";
+
+      if (currentId === "admin") {
+        updateAdminView();
+      } else {
+        updateStudentView(currentId);
+      }
+    }
+
+    function viewHistory(id) {
+      const history = accounts[id].history;
+      if (!history || history.length === 0) {
+        alert(`บัญชี ${id} ยังไม่มีรายการ`);
+      } else {
+        alert(`ประวัติของ ${id}:\n\n` + history.join("\n"));
+      }
+    }
+
+    function deleteAccount(id) {
+      if (confirm(`คุณแน่ใจว่าต้องการลบบัญชี ${id} หรือไม่?`)) {
+        delete accounts[id];
+        save();
+        updateAdminView();
+      }
+    }
+    window.onload = startApp;
+
+
+  </script>
+</body>
+
+</html>

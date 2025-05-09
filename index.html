@@ -165,7 +165,7 @@
   <script>
     function checkEntryCode() {
       const pass = document.getElementById("entryPassword").value;
-      if (pass === "Wisanusorn") {
+      if (pass === "1234") {
         document.getElementById("entryGate").style.display = "none";
         document.getElementById("app").style.display = "block";
         startApp(); // เรียกใช้แอปหลัก
@@ -179,7 +179,28 @@
     <img src="logo.png" alt="โลโก้โรงเรียนวิศานุสรณ์" />
   </div>
 
+
+  <!-- โหลด Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKZBvt0isFRfqY1qujd9p-v0YkS5h0mIo",
+    authDomain: "wisa-748f2.firebaseapp.com",
+    databaseURL: "https://wisa-748f2-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "wisa-748f2",
+    storageBucket: "wisa-748f2.firebasestorage.app",
+    messagingSenderId: "460431433825",
+    appId: "1:460431433825:web:6b22370e1869bf57200a20"
+  };
+
+  const app = firebase.initializeApp(firebaseConfig);
+
+</script>
+
   <script>
+
     let accounts = JSON.parse(localStorage.getItem("schoolAccounts") || "{}");
     let currentId = null;
 
@@ -218,28 +239,36 @@
     }
 
     function register() {
-      const id = document.getElementById("registerId").value.trim();
-      if (id && !accounts[id]) {
-        accounts[id] = { balance: 0, history: [] };
-        save();
-        alert("สร้างบัญชีเรียบร้อยแล้ว");
-        showLogin();
-      } else {
-        alert("รหัสนี้มีอยู่แล้ว หรือไม่ถูกต้อง");
-      }
-    }
+  const id = document.getElementById("registerId").value.trim();
+  if (id && !accounts[id]) {
+    // บันทึกบัญชีใหม่ใน Firebase
+    accounts[id] = { balance: 0, history: [] };
+    const accountsRef = database.ref('accounts');
+    accountsRef.child(id).set(accounts[id]); // บันทึกข้อมูลบัญชีใหม่
+    alert("สร้างบัญชีเรียบร้อยแล้ว");
+    showLogin();
+  } else {
+    alert("รหัสนี้มีอยู่แล้ว หรือไม่ถูกต้อง");
+  }
+}
 
-    function login() {
-      const id = document.getElementById("loginId").value.trim();
-      if (id === "admin123") {
-        updateAdminView();
-      } else if (accounts[id]) {
+   function login() {
+  const id = document.getElementById("loginId").value.trim();
+  if (id === "admin") {
+    updateAdminView();
+  } else {
+    // ตรวจสอบข้อมูลใน Firebase
+    const userRef = database.ref('accounts/' + id);
+    userRef.once('value', (snapshot) => {
+      if (snapshot.exists()) {
         currentId = id;
         updateStudentView(id);
       } else {
         alert("ไม่พบรหัสนี้ในระบบ");
       }
-    }
+    });
+  }
+}
 
     function logout() {
       currentId = null;
@@ -259,29 +288,29 @@
   `;
     }
 
-    function deposit() {
-      const amount = parseFloat(document.getElementById("amount").value);
-      if (amount > 0) {
-        const date = new Date().toLocaleDateString("th-TH");
-        accounts[currentId].balance += amount;
-        accounts[currentId].history.unshift(`ฝาก ${amount} บาท (${date})`);
-        save();
-        updateStudentView(currentId);
-      }
+  function deposit() {
+    const amount = parseFloat(document.getElementById("amount").value);
+    if (amount > 0) {
+      const date = new Date().toLocaleDateString("th-TH");
+      accounts[currentId].balance += amount;
+      accounts[currentId].history.unshift(`ฝาก ${amount} บาท (${date})`);
+      save(); // บันทึกข้อมูลลง Firebase
+      updateStudentView(currentId);
     }
+  }
 
     function withdraw() {
-      const amount = parseFloat(document.getElementById("amount").value);
-      if (amount > 0 && amount <= accounts[currentId].balance) {
-        const date = new Date().toLocaleDateString("th-TH");
-        accounts[currentId].balance -= amount;
-        accounts[currentId].history.unshift(`ถอน ${amount} บาท (${date})`);
-        save();
-        updateStudentView(currentId);
-      } else {
-        alert("ยอดเงินไม่พอ หรือจำนวนไม่ถูกต้อง");
-      }
+    const amount = parseFloat(document.getElementById("amount").value);
+    if (amount > 0 && amount <= accounts[currentId].balance) {
+      const date = new Date().toLocaleDateString("th-TH");
+      accounts[currentId].balance -= amount;
+      accounts[currentId].history.unshift(`ถอน ${amount} บาท (${date})`);
+      save(); // บันทึกข้อมูลลง Firebase
+      updateStudentView(currentId);
+    } else {
+      alert("ยอดเงินไม่พอ หรือจำนวนไม่ถูกต้อง");
     }
+  }
 
     function updateAdminView() {
       const container = document.getElementById("app");
@@ -389,7 +418,84 @@
         updateAdminView();
       }
     }
-    window.onload = startApp;
+    
+    // กำหนดฐานข้อมูล Firebase
+  const database = firebase.database();
+
+  // โหลดข้อมูลบัญชีทั้งหมดจาก Firebase เมื่อเริ่มต้น
+  function loadAccounts() {
+    const accountsRef = database.ref('accounts');
+    accountsRef.once('value', (snapshot) => {
+      accounts = snapshot.val() || {}; // ถ้าไม่มีข้อมูลใน Firebase ก็ใช้ว่าง
+      startApp(); // เรียกใช้แอปหลักหลังจากโหลดข้อมูล
+    });
+  }
+
+  // ฟังก์ชันในการบันทึกข้อมูลบัญชีลง Firebase
+  function save() {
+    const accountsRef = database.ref('accounts');
+    accountsRef.set(accounts); // บันทึกข้อมูลทั้งหมดที่เปลี่ยนแปลง
+  }
+  window.onload = loadAccounts;
+
+function loadAccounts() {
+  const accountsRef = database.ref('accounts');
+  accountsRef.once('value', (snapshot) => {
+    accounts = snapshot.val() || {}; // ถ้าไม่มีข้อมูลใน Firebase ก็ใช้ข้อมูลที่มี
+    startApp(); // เรียกใช้แอปหลักหลังจากโหลดข้อมูล
+  });
+}
+// ตั้งค่าฟังก์ชัน Firebase Authentication
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+
+const auth = getAuth();
+
+// ลงทะเบียนผู้ใช้ใหม่
+function register() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  
+  createUserWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      alert("สร้างบัญชีเรียบร้อยแล้ว");
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      alert(errorMessage);
+    });
+}
+
+// เข้าสู่ระบบผู้ใช้
+function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      alert("เข้าสู่ระบบสำเร็จ");
+    })
+    .catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      alert(errorMessage);
+    });
+}
+
+// ตรวจสอบสถานะการล็อกอินของผู้ใช้
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("User is logged in", user);
+  } else {
+    console.log("No user is logged in");
+  }
+});
+
+
   </script>
+
 </body>
+
 </html>

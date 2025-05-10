@@ -29,6 +29,29 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const db = getDatabase();
+    const userId = 'student1'; // ชื่อรหัสนักเรียนที่ต้องการบันทึก
+const studentRef = ref(db, 'students/' + userId); // การเข้าถึง path ในฐานข้อมูล Firebase
+set(studentRef, {
+  name: 'John Doe', // ชื่อนักเรียน
+  balance: 1000     // ยอดเงินตัวอย่าง
+}).then(() => {
+  console.log("บันทึกข้อมูลเสร็จสิ้น");
+}).catch((error) => {
+  console.error("เกิดข้อผิดพลาด: ", error);
+});
+const studentData = ref(db, 'students/' + userId); // ที่อยู่ของข้อมูล
+get(studentData).then((snapshot) => {
+  if (snapshot.exists()) {
+    console.log(snapshot.val()); // แสดงข้อมูล
+  } else {
+    console.log("ไม่มีข้อมูล");
+  }
+}).catch((error) => {
+  console.error("เกิดข้อผิดพลาด: ", error);
+});
+
+
 
     const $ = (id) => document.getElementById(id);
     let currentId = null;

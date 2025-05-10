@@ -1,317 +1,203 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wisa Bank</title>
-  <link href="https://fonts.googleapis.com/css2?family=Kanit&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
   <style>
-    body {
-      font-family: 'Kanit', sans-serif;
-      background: #E6F3FF;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-    }
-
-    #app, #entryGate, #historyPage {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 128, 255, 0.2);
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-    }
-
-    input[type="text"], input[type="number"], input[type="password"] {
-      width: 90%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    button {
-      padding: 10px 18px;
-      margin: 6px;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #005ecb;
-    }
-
-    #schoolLogo {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 999;
-    }
-
-    #schoolLogo img {
-      width: 80px;
-    }
+    /* Styles here */
   </style>
 </head>
 <body>
-  <div id="schoolLogo">
-    <img src="logo.png" alt="โลโก้โรงเรียนวิศานุสรณ์">
-  </div>
-
   <div id="entryGate">
     <h2>ใส่รหัสผ่านเพื่อเข้าสู่ระบบ</h2>
     <input type="password" id="entryPassword" placeholder="รหัสผ่าน" />
-    <br><br>
-    <button onclick="checkEntryCode()">ตกลง</button>
+    <button id="entryBtn">ตกลง</button>
+  </div>
+  
+  <div id="app" style="display: none;">
+    <h2>Welcome to Wisa Bank</h2>
+    <button id="loginBtn">เข้าสู่ระบบ</button>
+    <button id="registerBtn">สร้างบัญชีใหม่</button>
+  </div>
+  
+  <div id="schoolLogo">
+    <img src="logo.png" alt="โลโก้โรงเรียนวิศานุสรณ์" />
   </div>
 
-  <div id="app" style="display: none;"></div>
-
-  <div id="historyPage" style="display: none;">
-    <h2 style="color: #007BFF;">ประวัติการทำรายการ</h2>
-    <ul id="historyList" style="text-align: left; padding-left: 20px;"></ul>
-    <button onclick="printHistory()">พิมพ์ประวัติ</button>
-    <button onclick="exportToExcel()">ส่งออกเป็น Excel</button>
-    <button onclick="backToMain()">ย้อนกลับ</button>
-  </div>
-
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, get, set, update, child } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCKZBvt0isFRfqY1qujd9p-v0YkS5h0mIo",
       authDomain: "wisa-748f2.firebaseapp.com",
       databaseURL: "https://wisa-748f2-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "wisa-748f2",
-      storageBucket: "wisa-748f2.appspot.com",
+      storageBucket: "wisa-748f2.firebasestorage.app",
       messagingSenderId: "460431433825",
       appId: "1:460431433825:web:6b22370e1869bf57200a20"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const dbRef = ref(db);
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database(app);
 
-    let currentId = null;
-
-    function checkEntryCode() {
+    // ฟังก์ชันในการเข้าสู่ระบบ
+    document.getElementById('entryBtn').addEventListener('click', function() {
       const pass = document.getElementById("entryPassword").value;
       if (pass === "Wisanusorn") {
         document.getElementById("entryGate").style.display = "none";
         document.getElementById("app").style.display = "block";
-        startApp();
       } else {
         alert("รหัสผ่านไม่ถูกต้อง");
       }
-    }
+    });
 
-    function startApp() {
-      document.getElementById("app").innerHTML = `
-        <h2>Welcome to Wisa Bank</h2>
-        <button onclick="showLogin()">เข้าสู่ระบบ</button>
-        <button onclick="showRegister()">สร้างบัญชีใหม่</button>
-      `;
-    }
+    // ฟังก์ชันเพื่อแสดงหน้าจอล็อกอิน
+    document.getElementById('loginBtn').addEventListener('click', function() {
+      showLogin();
+    });
 
-    function showLogin() {
-      document.getElementById("app").innerHTML = `
-        <h2>เข้าสู่ระบบ</h2>
-        <input type="text" id="loginId" placeholder="รหัสนักเรียน / admin" />
-        <button onclick="login()">เข้าสู่ระบบ</button>
-        <button onclick="startApp()">ย้อนกลับ</button>
-      `;
-    }
+    // ฟังก์ชันเพื่อแสดงหน้าจอลงทะเบียน
+    document.getElementById('registerBtn').addEventListener('click', function() {
+      showRegister();
+    });
 
+    // ฟังก์ชันการลงทะเบียนบัญชีใหม่
     function showRegister() {
-      document.getElementById("app").innerHTML = `
+      const container = document.getElementById("app");
+      container.innerHTML = `
         <h2>สร้างบัญชีใหม่</h2>
         <input type="text" id="registerId" placeholder="รหัสนักเรียน" />
-        <button onclick="register()">สร้างบัญชี</button>
-        <button onclick="startApp()">ย้อนกลับ</button>
+        <button id="registerAccountBtn">สร้างบัญชี</button>
+        <button onclick="backToMain()">ย้อนกลับ</button>
       `;
+      
+      document.getElementById('registerAccountBtn').addEventListener('click', function() {
+        register();
+      });
     }
 
-    async function register() {
-      const id = document.getElementById("registerId").value.trim();
-      if (!id) return alert("กรุณากรอกรหัส");
+    // ฟังก์ชันการล็อกอิน
+    function showLogin() {
+      const container = document.getElementById("app");
+      container.innerHTML = `
+        <h2>เข้าสู่ระบบ</h2>
+        <input type="text" id="loginId" placeholder="รหัสนักเรียน / admin" />
+        <button id="loginSubmitBtn">เข้าสู่ระบบ</button>
+        <button onclick="backToMain()">ย้อนกลับ</button>
+      `;
+      
+      document.getElementById('loginSubmitBtn').addEventListener('click', function() {
+        login();
+      });
+    }
 
-      const snapshot = await get(child(dbRef, `schoolAccounts/${id}`));
-      if (snapshot.exists()) {
-        alert("รหัสนี้มีอยู่แล้ว");
-      } else {
-        await set(ref(db, `schoolAccounts/${id}`), {
+    // ฟังก์ชันลงทะเบียน
+    function register() {
+      const id = document.getElementById("registerId").value.trim();
+      if (id) {
+        const userRef = db.ref('accounts/' + id);
+        userRef.set({
           balance: 0,
           history: []
         });
-        alert("สร้างบัญชีเรียบร้อยแล้ว");
+        alert("บัญชีถูกสร้างแล้ว");
         showLogin();
+      } else {
+        alert("กรุณากรอกรหัสนักเรียน");
       }
     }
 
-    async function login() {
+    // ฟังก์ชันล็อกอิน
+    function login() {
       const id = document.getElementById("loginId").value.trim();
-      if (id === "admin123") {
-        updateAdminView();
-      } else {
-        const snapshot = await get(child(dbRef, `schoolAccounts/${id}`));
+      const userRef = db.ref('accounts/' + id);
+      userRef.once('value', (snapshot) => {
         if (snapshot.exists()) {
-          currentId = id;
-          updateStudentView(snapshot.val());
+          updateStudentView(id);
         } else {
           alert("ไม่พบรหัสนี้ในระบบ");
         }
-      }
+      });
     }
 
-    async function updateStudentView(data) {
-      document.getElementById("app").innerHTML = `
-        <h2>บัญชี: ${currentId}</h2>
-        <p>ยอดเงินคงเหลือ: ${data.balance} บาท</p>
+    // ฟังก์ชันแสดงหน้าจอข้อมูลบัญชี
+    function updateStudentView(id) {
+      const container = document.getElementById("app");
+      container.innerHTML = `
+        <h2>บัญชี: ${id}</h2>
+        <p>ยอดเงินคงเหลือ: <span id="balance">0</span> บาท</p>
         <input type="number" id="amount" placeholder="จำนวนเงิน" />
-        <button onclick="deposit()">ฝาก</button>
-        <button onclick="withdraw()">ถอน</button>
-        <button onclick="showStudentHistory()">ดูประวัติ</button>
+        <button id="depositBtn">ฝาก</button>
+        <button id="withdrawBtn">ถอน</button>
+        <button id="historyBtn">ดูประวัติ</button>
         <button onclick="logout()">ออกจากระบบ</button>
       `;
+      
+      document.getElementById('depositBtn').addEventListener('click', deposit);
+      document.getElementById('withdrawBtn').addEventListener('click', withdraw);
+      document.getElementById('historyBtn').addEventListener('click', showHistory);
+
+      // Get balance
+      userRef.once('value', (snapshot) => {
+        const balance = snapshot.val().balance;
+        document.getElementById("balance").textContent = balance;
+      });
     }
 
-    async function deposit() {
+    // ฟังก์ชันฝากเงิน
+    function deposit() {
       const amount = parseFloat(document.getElementById("amount").value);
       if (amount > 0) {
-        const snapshot = await get(child(dbRef, `schoolAccounts/${currentId}`));
-        const data = snapshot.val();
-        const newBalance = data.balance + amount;
-        const date = new Date().toLocaleDateString("th-TH");
-        const newHistory = [`ฝาก ${amount} บาท (${date})`, ...data.history];
-
-        await update(ref(db, `schoolAccounts/${currentId}`), {
-          balance: newBalance,
-          history: newHistory
+        const userRef = db.ref('accounts/' + currentId);
+        userRef.transaction((currentData) => {
+          if (currentData) {
+            currentData.balance += amount;
+            currentData.history.push(`ฝาก ${amount} บาท`);
+          }
+          return currentData;
         });
-        updateStudentView({ balance: newBalance, history: newHistory });
       }
     }
 
-    async function withdraw() {
+    // ฟังก์ชันถอนเงิน
+    function withdraw() {
       const amount = parseFloat(document.getElementById("amount").value);
-      const snapshot = await get(child(dbRef, `schoolAccounts/${currentId}`));
-      const data = snapshot.val();
-
-      if (amount > 0 && amount <= data.balance) {
-        const newBalance = data.balance - amount;
-        const date = new Date().toLocaleDateString("th-TH");
-        const newHistory = [`ถอน ${amount} บาท (${date})`, ...data.history];
-
-        await update(ref(db, `schoolAccounts/${currentId}`), {
-          balance: newBalance,
-          history: newHistory
-        });
-        updateStudentView({ balance: newBalance, history: newHistory });
-      } else {
-        alert("ยอดเงินไม่พอ หรือจำนวนไม่ถูกต้อง");
-      }
-    }
-
-    async function updateAdminView() {
-      document.getElementById("app").innerHTML = "<h2>แอดมิน - จัดการบัญชี</h2>";
-      const snapshot = await get(child(dbRef, "schoolAccounts"));
-      const accounts = snapshot.val();
-
-      for (const id in accounts) {
-        const div = document.createElement("div");
-        div.innerHTML = `
-          <strong>${id}</strong> - ยอดเงิน: ${accounts[id].balance} บาท
-          <button onclick="showStudentHistory('${id}')">ดูประวัติ</button>
-        `;
-        document.getElementById("app").appendChild(div);
-      }
-
-      const btn = document.createElement("button");
-      btn.textContent = "ออกจากระบบ";
-      btn.onclick = logout;
-      document.getElementById("app").appendChild(btn);
-    }
-
-    async function showStudentHistory(id) {
-      const studentId = id || currentId;
-      const snapshot = await get(child(dbRef, `schoolAccounts/${studentId}`));
-      const history = snapshot.val().history;
-
-      document.getElementById("app").style.display = "none";
-      document.getElementById("historyPage").style.display = "block";
-      const list = document.getElementById("historyList");
-      list.innerHTML = "";
-
-      if (!history || history.length === 0) {
-        list.innerHTML = "<li>ไม่มีรายการ</li>";
-      } else {
-        history.forEach(item => {
-          const li = document.createElement("li");
-          li.textContent = item;
-          list.appendChild(li);
+      if (amount > 0) {
+        const userRef = db.ref('accounts/' + currentId);
+        userRef.transaction((currentData) => {
+          if (currentData && currentData.balance >= amount) {
+            currentData.balance -= amount;
+            currentData.history.push(`ถอน ${amount} บาท`);
+          }
+          return currentData;
         });
       }
     }
 
-    function printHistory() {
-      window.print();
-    }
-
-    function exportToExcel() {
-      const items = document.querySelectorAll("#historyList li");
-      if (items.length === 0) return alert("ไม่มีข้อมูลให้ส่งออก");
-
-      let csv = "รายการ\n";
-      items.forEach(li => {
-        csv += li.textContent + "\n";
+    // ฟังก์ชันดูประวัติ
+    function showHistory() {
+      const userRef = db.ref('accounts/' + currentId);
+      userRef.once('value', (snapshot) => {
+        const history = snapshot.val().history;
+        alert("ประวัติการทำรายการ: " + history.join("\n"));
       });
-
-      const blob = new Blob([csv], { type: "text/csv" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "ประวัติบัญชี.csv";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     }
 
-    function backToMain() {
-      document.getElementById("historyPage").style.display = "none";
-      document.getElementById("app").style.display = "block";
-      if (currentId === "admin") updateAdminView();
-      else login(); // reload student view
-    }
-
+    // ฟังก์ชันออกจากระบบ
     function logout() {
       currentId = null;
-      startApp();
+      showLogin();
     }
 
-    window.checkEntryCode = checkEntryCode;
-    window.showLogin = showLogin;
-    window.showRegister = showRegister;
-    window.register = register;
-    window.login = login;
-    window.deposit = deposit;
-    window.withdraw = withdraw;
-    window.showStudentHistory = showStudentHistory;
-    window.printHistory = printHistory;
-    window.exportToExcel = exportToExcel;
-    window.backToMain = backToMain;
-    window.logout = logout;
-
-    window.onload = startApp;
+    // ฟังก์ชันย้อนกลับ
+    function backToMain() {
+      document.getElementById("app").innerHTML = `
+        <h2>Welcome to Wisa Bank</h2>
+        <button id="loginBtn">เข้าสู่ระบบ</button>
+        <button id="registerBtn">สร้างบัญชีใหม่</button>
+      `;
+    }
   </script>
 </body>
 </html>

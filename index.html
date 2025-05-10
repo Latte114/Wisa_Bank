@@ -40,18 +40,6 @@ set(studentRef, {
 }).catch((error) => {
   console.error("เกิดข้อผิดพลาด: ", error);
 });
-const studentData = ref(db, 'students/' + userId); // ที่อยู่ของข้อมูล
-get(studentData).then((snapshot) => {
-  if (snapshot.exists()) {
-    console.log(snapshot.val()); // แสดงข้อมูล
-  } else {
-    console.log("ไม่มีข้อมูล");
-  }
-}).catch((error) => {
-  console.error("เกิดข้อผิดพลาด: ", error);
-});
-
-
 
     const $ = (id) => document.getElementById(id);
     let currentId = null;

@@ -17,7 +17,9 @@
       margin: 0;
     }
 
-    #app, #historyPage, #entryGate {
+    #app,
+    #historyPage,
+    #entryGate {
       background: white;
       padding: 30px;
       border-radius: 12px;
@@ -26,7 +28,8 @@
       width: 100%;
     }
 
-    input, button {
+    input,
+    button {
       width: 90%;
       padding: 10px;
       margin: 10px auto;
@@ -181,36 +184,44 @@
     }
 
     window.deposit = async () => {
-  const amt = parseFloat($("amount").value);
-  console.log("ยอดที่ฝาก:", amt);
-  if (amt <= 0) return;
+      const amt = parseFloat($("amount").value);
+      if (amt <= 0) return;
 
-  const refPath = ref(db, `accounts/${currentId}`);
-  const snap = await get(refPath);
-  const data = snap.val();
-  console.log("ข้อมูลก่อนฝาก:", data);
+      const refPath = ref(db, `accounts/${currentId}`);
+      const snap = await get(refPath);
+      const data = snap.val();
 
-  data.balance += amt;
-  data.history.unshift(`ฝาก ${amt} บาท (${new Date().toLocaleDateString("th-TH")})`);
+      // ✅ ป้องกัน history เป็น undefined
+      if (!Array.isArray(data.history)) {
+        data.history = [];
+      }
 
-  await update(refPath, data);
-  console.log("อัปเดตเรียบร้อย");
+      data.balance += amt;
+      data.history.unshift(`ฝาก ${amt} บาท (${new Date().toLocaleDateString("th-TH")})`);
 
-  updateStudentView(currentId, data);
-};
-
+      await update(refPath, data);
+      updateStudentView(currentId, data);
+    };
 
     window.withdraw = async () => {
       const amt = parseFloat($("amount").value);
       const refPath = ref(db, `accounts/${currentId}`);
       const snap = await get(refPath);
       const data = snap.val();
+
       if (amt <= 0 || amt > data.balance) {
         alert("ยอดเงินไม่พอ หรือจำนวนไม่ถูกต้อง");
         return;
       }
+
+      // ✅ ป้องกัน history เป็น undefined
+      if (!Array.isArray(data.history)) {
+        data.history = [];
+      }
+
       data.balance -= amt;
       data.history.unshift(`ถอน ${amt} บาท (${new Date().toLocaleDateString("th-TH")})`);
+
       await update(refPath, data);
       updateStudentView(currentId, data);
     };

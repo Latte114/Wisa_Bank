@@ -300,6 +300,17 @@
       const historyList = $("historyList");
       historyList.innerHTML = "";
 
+      // ลบปุ่มส่งออกที่อาจซ้ำอยู่ก่อน
+      const existingExport = document.getElementById("exportBtn");
+      if (existingExport) existingExport.remove();
+
+      // เพิ่มปุ่มส่งออกประวัติ
+      const exportBtn = document.createElement("button");
+      exportBtn.textContent = "ส่งออกประวัติ";
+      exportBtn.id = "exportBtn";
+      exportBtn.onclick = () => exportHistoryToCSV(data.history);  // เรียกฟังก์ชันส่งออก CSV
+      historyDiv.appendChild(exportBtn);
+
       if (data.history.length === 0) {
         historyList.innerHTML = "<li>ไม่มีรายการ</li>";
       } else {
@@ -311,13 +322,8 @@
       }
 
       historyDiv.style.display = "block";
-
-      // เพิ่มปุ่มส่งออกประวัติ
-      const exportButton = document.createElement("button");
-      exportButton.textContent = "ส่งออกประวัติ";
-      exportButton.onclick = () => exportHistoryToCSV(data.history);
-      historyDiv.appendChild(exportButton);
     };
+
 
     function exportHistoryToCSV(history) {
       const csvContent = "data:text/csv;charset=utf-8,"
@@ -350,6 +356,14 @@
       }
     };
 
+    window.exportHistory = (historyArray, id) => {
+      const content = historyArray.join("\n");
+      const blob = new Blob([content], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `history_${id}.txt`;
+      link.click();
+    };
 
   </script>
 </head>

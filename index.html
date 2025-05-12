@@ -189,9 +189,18 @@
 
       const refPath = ref(db, `accounts/${currentId}`);
       const snap = await get(refPath);
+
+      if (!snap.exists()) {
+        alert("ไม่พบข้อมูลบัญชี");
+        return;
+      }
+
       const data = snap.val();
 
-      // ✅ ป้องกัน history เป็น undefined
+      if (typeof data.balance !== "number") {
+        data.balance = 0;
+      }
+
       if (!Array.isArray(data.history)) {
         data.history = [];
       }
@@ -203,20 +212,30 @@
       updateStudentView(currentId, data);
     };
 
+
     window.withdraw = async () => {
       const amt = parseFloat($("amount").value);
       const refPath = ref(db, `accounts/${currentId}`);
       const snap = await get(refPath);
+
+      if (!snap.exists()) {
+        alert("ไม่พบข้อมูลบัญชี");
+        return;
+      }
+
       const data = snap.val();
+
+      if (typeof data.balance !== "number") {
+        data.balance = 0;
+      }
+
+      if (!Array.isArray(data.history)) {
+        data.history = [];
+      }
 
       if (amt <= 0 || amt > data.balance) {
         alert("ยอดเงินไม่พอ หรือจำนวนไม่ถูกต้อง");
         return;
-      }
-
-      // ✅ ป้องกัน history เป็น undefined
-      if (!Array.isArray(data.history)) {
-        data.history = [];
       }
 
       data.balance -= amt;
@@ -225,6 +244,7 @@
       await update(refPath, data);
       updateStudentView(currentId, data);
     };
+
 
     window.logout = () => {
       currentId = null;

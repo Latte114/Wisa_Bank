@@ -334,9 +334,23 @@
     window.backToMain = () => {
       $("historyPage").style.display = "none";
       $("app").style.display = "block";
-      if (currentId === "admin123") updateAdminView();
-      else login();
+
+      if (currentId === "admin123") {
+        updateAdminView();
+      } else if (currentId) {
+        // ถ้ามี currentId แล้ว แสดงหน้าของนักเรียนคนนั้น
+        get(ref(db, `accounts/${currentId}`)).then((snap) => {
+          if (snap.exists()) {
+            updateStudentView(currentId, snap.val());
+          } else {
+            startApp(); // fallback
+          }
+        });
+      } else {
+        startApp(); // fallback ถ้าไม่มี currentId
+      }
     };
+
   </script>
 </head>
 

@@ -181,16 +181,24 @@
     }
 
     window.deposit = async () => {
-      const amt = parseFloat($("amount").value);
-      if (amt <= 0) return;
-      const refPath = ref(db, `accounts/${currentId}`);
-      const snap = await get(refPath);
-      const data = snap.val();
-      data.balance += amt;
-      data.history.unshift(`ฝาก ${amt} บาท (${new Date().toLocaleDateString("th-TH")})`);
-      await update(refPath, data);
-      updateStudentView(currentId, data);
-    };
+  const amt = parseFloat($("amount").value);
+  console.log("ยอดที่ฝาก:", amt);
+  if (amt <= 0) return;
+
+  const refPath = ref(db, `accounts/${currentId}`);
+  const snap = await get(refPath);
+  const data = snap.val();
+  console.log("ข้อมูลก่อนฝาก:", data);
+
+  data.balance += amt;
+  data.history.unshift(`ฝาก ${amt} บาท (${new Date().toLocaleDateString("th-TH")})`);
+
+  await update(refPath, data);
+  console.log("อัปเดตเรียบร้อย");
+
+  updateStudentView(currentId, data);
+};
+
 
     window.withdraw = async () => {
       const amt = parseFloat($("amount").value);

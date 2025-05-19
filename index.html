@@ -69,6 +69,35 @@
     }
   </style>
   <script type="module">
+    function exportHistoryToExcel(history) {
+      const wsData = [["วันที่", "รายการ", "จำนวนเงิน (บาท)"]];
+      let total = 0;
+
+      history.forEach((entry) => {
+        if (typeof entry !== "string") return;  // เช็คก่อนว่า entry เป็น string
+
+        const match = entry.match(/(ฝาก|ถอน)\s([\d.]+)\sบาท\s\((.+)\)/);
+        if (match) {
+          const type = match[1];
+          const amount = parseFloat(match[2]);
+          const date = match[3];
+          const signedAmount = type === "ฝาก" ? amount : -amount;
+          total += signedAmount;
+          wsData.push([date, type, signedAmount]);
+        }
+      });
+
+      wsData.push(["", "รวม", total]);
+
+      const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "ประวัติรายการ");
+
+      XLSX.writeFile(workbook, `history_${currentId}.xlsx`);
+    }
+    window.exportHistoryToExcel = exportHistoryToExcel;
+
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import {
       getDatabase,
@@ -79,6 +108,8 @@
       remove,
       onValue
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import * as XLSX from "https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs";
+
 
     const firebaseConfig = {
       apiKey: "AIzaSyDy31hx7IoFqfvXZWeRwTtWjkq8BdmyEic",
@@ -306,10 +337,11 @@
       if (existingExport) existingExport.remove();
 
       // เพิ่มปุ่มส่งออกประวัติ
+      // เพิ่มปุ่มส่งออก Excel
       const exportBtn = document.createElement("button");
-      exportBtn.textContent = "ส่งออกประวัติ";
+      exportBtn.textContent = "ส่งออกประวัติ (.xlsx)";
       exportBtn.id = "exportBtn";
-      exportBtn.onclick = () => exportHistoryToCSV(data.history);  // เรียกฟังก์ชันส่งออก CSV
+      exportBtn.onclick = () => exportHistoryToExcel(data.history);
       historyDiv.appendChild(exportBtn);
 
       if (data.history.length === 0) {
@@ -324,19 +356,6 @@
 
       historyDiv.style.display = "block";
     };
-
-
-    function exportHistoryToCSV(history) {
-      const csvContent = "data:text/csv;charset=utf-8,"
-        + "วันที่,รายการ\n"
-        + history.map(item => `"${new Date().toLocaleDateString('th-TH')}",${item}`).join("\n");
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `history_${currentId}.csv`);
-      link.click();
-    }
 
     window.backToMain = () => {
       $("historyPage").style.display = "none";
@@ -387,6 +406,7 @@
     <ul id="historyList" style="text-align:left;"></ul>
     <button onclick="backToMain()">ย้อนกลับ</button>
   </div>
+
 </body>
 
 </html>

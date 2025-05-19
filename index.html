@@ -296,21 +296,69 @@
       const container = $("app");
       container.innerHTML = `<h2>แอดมิน - จัดการบัญชี</h2>`;
       const allRef = ref(db, 'accounts');
+
       onValue(allRef, (snapshot) => {
         const data = snapshot.val();
         container.innerHTML = `<h2>แอดมิน - จัดการบัญชี</h2>`;
+
+        let totalBalance = 0;
+
         for (const id in data) {
+          const user = data[id];
+          totalBalance += typeof user.balance === "number" ? user.balance : 0;
+
           const div = document.createElement("div");
-          div.innerHTML = `<strong>${data[id].name}</strong> (${id}) - ยอดเงิน: ${data[id].balance} บาท
-          <button onclick="showStudentHistory('${id}')">ดูประวัติ</button>
-          <button onclick="deleteAccount('${id}')">ลบบัญชี</button>`;
+          div.innerHTML = `
+        <strong>${user.name}</strong> (${id}) - ยอดเงิน: ${user.balance} บาท
+        <button onclick="showStudentHistory('${id}')">ดูประวัติ</button>
+        <button onclick="deleteAccount('${id}')">ลบบัญชี</button>
+      `;
           container.appendChild(div);
         }
+
+        // แสดงยอดรวมทั้งหมด
+        const totalDiv = document.createElement("div");
+        totalDiv.innerHTML = `<h3>💰 ยอดรวมทั้งหมดในระบบ: ${totalBalance} บาท</h3>`;
+        totalDiv.style.marginTop = "20px";
+        container.appendChild(totalDiv);
+
+        const exportBtn = document.createElement("button");
+        exportBtn.textContent = "📤 ส่งออกบัญชีทั้งหมด (Excel)";
+        exportBtn.onclick = exportAllAccountsToExcel;
+        container.appendChild(exportBtn);
+
         const logoutBtn = document.createElement("button");
         logoutBtn.textContent = "ออกจากระบบ";
         logoutBtn.onclick = logout;
         container.appendChild(logoutBtn);
       });
+    };
+
+    window.exportAllAccountsToExcel = async () => {
+      const snapshot = await get(ref(db, 'accounts'));
+      const accounts = snapshot.val();
+
+      if (!accounts) {
+        alert("ไม่พบข้อมูลบัญชี");
+        return;
+      }
+
+      const rows = [["ชื่อ", "รหัส", "ยอดเงิน"]];
+      let total = 0;
+
+      for (const id in accounts) {
+        const user = accounts[id];
+        rows.push([user.name, id, user.balance]);
+        total += typeof user.balance === "number" ? user.balance : 0;
+      }
+
+      rows.push(["", "รวมทั้งหมด", total]);
+
+      const worksheet = XLSX.utils.aoa_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "บัญชีทั้งหมด");
+
+      XLSX.writeFile(workbook, "บัญชีทั้งหมด.xlsx");
     };
 
     window.deleteAccount = async (id) => {

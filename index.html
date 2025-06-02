@@ -293,13 +293,31 @@
 
     window.updateAdminView = () => {
       const container = $("app");
-      container.innerHTML = `<h2>แอดมิน - จัดการบัญชี</h2>`;
       const allRef = ref(db, 'accounts');
 
       onValue(allRef, (snapshot) => {
         const data = snapshot.val();
         container.innerHTML = `<h2>แอดมิน - จัดการบัญชี</h2>`;
 
+        // ✅ เพิ่มช่องค้นหาวันที่ตรงนี้
+        const dateSearchSection = document.createElement("div");
+        dateSearchSection.style.marginBottom = "16px";
+
+        const dateInput = document.createElement("input");
+        dateInput.type = "date";
+        dateInput.id = "searchDate";
+        dateInput.style.marginRight = "8px";
+
+        const searchBtn = document.createElement("button");
+        searchBtn.textContent = "🔍 ค้นหารายการตามวันที่";
+        searchBtn.onclick = () => searchByDate(dateInput.value);
+
+        dateSearchSection.appendChild(dateInput);
+        dateSearchSection.appendChild(searchBtn);
+
+        container.appendChild(dateSearchSection);
+
+        // ✅ รวมยอดเงินและแสดงบัญชีทั้งหมด
         let totalBalance = 0;
 
         for (const id in data) {
@@ -315,7 +333,7 @@
           container.appendChild(div);
         }
 
-        // แสดงยอดรวมทั้งหมด
+        // ✅ แสดงยอดรวม
         const totalDiv = document.createElement("div");
         totalDiv.innerHTML = `<h3>💰 ยอดรวมทั้งหมดในระบบ: ${totalBalance} บาท</h3>`;
         totalDiv.style.marginTop = "20px";
@@ -432,6 +450,83 @@
       link.click();
     };
 
+    async function searchByDate(date) {
+      if (!date) {
+        alert("กรุณาเลือกวันที่ก่อนค้นหา");
+        return;
+      }
+
+      const container = $("app");
+      container.innerHTML = `
+    <h2>ผลการค้นหา วันที่ ${date}</h2>
+    <button id="backBtn">⬅️ กลับไปหน้าแอดมิน</button>
+    <div id="results" style="margin-top:16px;"></div>
+    <h3 id="totalSum" style="margin-top:20px;"></h3>
+  `;
+
+      document.getElementById("backBtn").onclick = () => updateAdminView();
+
+      const accountsSnap = await get(ref(db, 'accounts'));
+      const accountsData = accountsSnap.val();
+
+      const resultsDiv = document.getElementById("results");
+      let totalFilteredBalance = 0;
+      let foundCount = 0;
+
+      // รูปแบบวันที่ที่ต้องการค้นหา เช่น "1/6/2568" หรือ "01/06/2568" ต้องแม่นกับ format ใน history string
+      // โค้ดตัวอย่างสมมติใช้ new Date().toLocaleDateString("th-TH") format dd/mm/yyyy (พ.ศ.)
+      // ดังนั้นแนะนำให้แปลง date input เป็นรูปแบบเดียวกันก่อน
+
+      // แปลง date จาก input (yyyy-mm-dd) เป็น dd/mm/yyyy (พ.ศ.)
+      function formatDateToThai(dateStr) {
+        const parts = dateStr.split("-");
+        const yearBuddhist = (parseInt(parts[0]) + 543).toString();
+        return `${parseInt(parts[2])}/${parseInt(parts[1])}/${yearBuddhist}`;
+      }
+
+      const searchDateThai = formatDateToThai(date);
+
+      for (const id in accountsData) {
+        const user = accountsData[id];
+        if (!user.history || !Array.isArray(user.history)) continue;
+
+        user.history.forEach(entry => {
+          // entry ตัวอย่าง: "ฝาก 100 บาท (1/6/2568)"
+          if (entry.includes(`(${searchDateThai})`)) {
+            foundCount++;
+            const div = document.createElement("div");
+            div.style.border = "1px solid #ccc";
+            div.style.padding = "8px";
+            div.style.marginBottom = "8px";
+            div.style.borderRadius = "5px";
+            div.style.backgroundColor = "#f9f9f9";
+
+            div.innerHTML = `
+          <strong>บัญชี: ${user.name} (${id})</strong><br>
+          รายการ: ${entry}
+        `;
+            resultsDiv.appendChild(div);
+
+            // คำนวณยอดรวมจาก string entry
+            const match = entry.match(/(ฝาก|ถอน)\s([\d.]+)\sบาท/);
+            if (match) {
+              const type = match[1];
+              const amount = parseFloat(match[2]);
+              if (type === "ฝาก") totalFilteredBalance += amount;
+              else if (type === "ถอน") totalFilteredBalance -= amount;
+            }
+          }
+        });
+      }
+
+      if (foundCount === 0) {
+        resultsDiv.innerHTML = "<i>ไม่พบรายการตามวันที่ที่เลือก</i>";
+      }
+
+      const totalSum = document.getElementById("totalSum");
+      totalSum.textContent = `ยอดรวมสุทธิของรายการที่ค้นหา: ${totalFilteredBalance} บาท`;
+    }
+
   </script>
 </head>
 
@@ -451,6 +546,12 @@
   <div id="historyPage" style="display:none;">
     <h2>ประวัติการทำรายการ</h2>
     <ul id="historyList" style="text-align:left;"></ul>
+    <button onclick="backToMain()">ย้อนกลับ</button>
+  </div>
+
+  <div id="dateSearchPage" style="display:none;">
+    <h2>ผลการค้นหาตามวันที่</h2>
+    <ul id="dateSearchResult"></ul>
     <button onclick="backToMain()">ย้อนกลับ</button>
   </div>
 

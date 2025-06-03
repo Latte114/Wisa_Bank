@@ -75,6 +75,8 @@
       width: 80px;
       height: auto;
     }
+
+
     #wisa-version-box {
       position: fixed;
       bottom: 10px;
@@ -87,12 +89,18 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       z-index: 999;
     }
+
+
+    .user-card button {
+      transition: background-color 0.2s;
+    }
   </style>
   <script type="module">
-    const WISA_VERSION = "v1.2.0"; // เวอร์ชันปัจจุบัน
+    const WISA_VERSION = "v1.4.0"; // เวอร์ชันปัจจุบัน
     document.getElementById("wisa-version").textContent = WISA_VERSION;
     window.WISA_VERSION = WISA_VERSION; // ให้ HTML มองเห็น
-    
+
+
     function exportHistoryToExcel(history) {
       const wsData = [["วันที่", "รายการ", "จำนวนเงิน (บาท)"]];
       let total = 0;
@@ -402,13 +410,94 @@
           totalBalance += typeof user.balance === "number" ? user.balance : 0;
 
 
-          const div = document.createElement("div");
-          div.innerHTML = `
-    <strong>${user.name}</strong> (${id}) - ยอดเงิน: ${user.balance} บาท
-    <button onclick="showStudentHistory('${id}')">ดูประวัติ</button>
-    <button onclick="deleteAccount('${id}')">ลบบัญชี</button>
-  `;
-          container.appendChild(div);
+          const userContainer = document.createElement("div");
+          userContainer.className = "user-card";
+          userContainer.style.marginBottom = "16px";
+          userContainer.style.borderRadius = "12px";
+          userContainer.style.overflow = "hidden";
+          userContainer.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+          userContainer.style.backgroundColor = "#fff";
+          userContainer.style.color = "black";
+          userContainer.style.transition = "transform 0.2s ease-in-out";
+          userContainer.onmouseover = () => (userContainer.style.transform = "translateY(-2px)");
+          userContainer.onmouseout = () => (userContainer.style.transform = "translateY(0)");
+
+
+          const header = document.createElement("div");
+          header.style.display = "flex";
+          header.style.justifyContent = "space-between";
+          header.style.alignItems = "center";
+          header.style.padding = "12px 16px";
+          header.style.cursor = "pointer";
+          header.style.backgroundColor = "#f8f9fa";
+          header.style.color = "black";
+          header.style.fontSize = "16px";
+          header.style.fontWeight = "500";
+
+
+          const nameElem = document.createElement("span");
+          nameElem.innerHTML = `<strong style="color:black">${user.name}</strong> (${id})<br><small>💰 ยอดเงิน: ${user.balance} บาท</small>`;
+
+
+          const arrow = document.createElement("span");
+          arrow.textContent = "▼";
+          arrow.style.transition = "transform 0.3s ease";
+          arrow.style.fontSize = "18px";
+          arrow.style.color = "#555";
+
+
+          header.appendChild(nameElem);
+          header.appendChild(arrow);
+
+
+          const menu = document.createElement("div");
+          menu.style.maxHeight = "0px";
+          menu.style.overflow = "hidden";
+          menu.style.transition = "max-height 0.3s ease-in-out, padding 0.3s";
+          menu.style.padding = "0 16px";
+          menu.style.backgroundColor = "#ffffff";
+
+
+          const btns = [
+            ["📜 ดูประวัติ", () => showStudentHistory(id)],
+            ["✏️ แก้ไขชื่อ", () => editUserName(id, user.name)],
+            ["🆔 แก้ไขเลขประจำตัว", () => editUserId(id)],
+            ["🗑️ ลบบัญชี", () => deleteAccount(id)],
+          ];
+
+
+          for (const [label, handler] of btns) {
+            const btn = document.createElement("button");
+            btn.textContent = label;
+            btn.style.display = "block";
+            btn.style.width = "100%";
+            btn.style.textAlign = "left";
+            btn.style.margin = "8px 0";
+            btn.style.padding = "10px 14px";
+            btn.style.background = "#f1f3f5";
+            btn.style.border = "none";
+            btn.style.borderRadius = "8px";
+            btn.style.cursor = "pointer";
+            btn.style.fontSize = "14px";
+            btn.style.color = "#212529";
+            btn.onmouseover = () => (btn.style.backgroundColor = "#e9ecef");
+            btn.onmouseout = () => (btn.style.backgroundColor = "#f1f3f5");
+            btn.onclick = handler;
+            menu.appendChild(btn);
+          }
+
+
+          header.onclick = () => {
+            const expanded = menu.style.maxHeight !== "0px";
+            menu.style.maxHeight = expanded ? "0px" : "240px";
+            menu.style.padding = expanded ? "0 16px" : "12px 16px";
+            arrow.style.transform = expanded ? "rotate(0deg)" : "rotate(180deg)";
+          };
+
+
+          userContainer.appendChild(header);
+          userContainer.appendChild(menu);
+          container.appendChild(userContainer);
         }
 
 
@@ -638,6 +727,39 @@
       const totalSum = document.getElementById("totalSum");
       totalSum.textContent = `ยอดรวมสุทธิของรายการที่ค้นหา: ${totalFilteredBalance} บาท`;
     }
+    window.editUserName = function (id, oldName) {
+      const newName = prompt("กรุณากรอกชื่อใหม่:", oldName);
+      if (newName && newName !== oldName) {
+        update(ref(db, `users/${id}`), { name: newName })
+          .then(() => {
+            alert("อัปเดตชื่อสำเร็จ");
+            updateAdminView();
+          })
+          .catch((error) => {
+            console.error("เกิดข้อผิดพลาด:", error);
+          });
+      }
+    };
+
+
+    window.editUserId = function (oldId) {
+      const newId = prompt("กรุณากรอกเลขประจำตัวใหม่:", oldId);
+      if (newId && newId !== oldId) {
+        get(child(dbRef, `users/${oldId}`)).then((snapshot) => {
+          if (snapshot.exists()) {
+            const userData = snapshot.val();
+            set(ref(db, `users/${newId}`), userData).then(() => {
+              remove(ref(db, `users/${oldId}`)).then(() => {
+                alert("อัปเดตเลขประจำตัวสำเร็จ");
+                updateAdminView();
+              });
+            });
+          }
+        });
+      }
+    };
+
+
 
 
   </script>
@@ -672,9 +794,12 @@
     <ul id="dateSearchResult"></ul>
     <button onclick="backToMain()">ย้อนกลับ</button>
   </div>
+
+
   <div id="wisa-version-box">
     Wisa Bank Version <span id="wisa-version"></span>
   </div>
+
 
 </body>
 

@@ -96,19 +96,17 @@
     }
   </style>
   <script type="module">
-    const WISA_VERSION = "v1.4.0"; // เวอร์ชันปัจจุบัน
+    const WISA_VERSION = "v1.4.1"; // เวอร์ชันปัจจุบัน
     document.getElementById("wisa-version").textContent = WISA_VERSION;
     window.WISA_VERSION = WISA_VERSION; // ให้ HTML มองเห็น
 
 
-    function exportHistoryToExcel(history) {
+    function exportHistoryToExcel(history, userName) {
       const wsData = [["วันที่", "รายการ", "จำนวนเงิน (บาท)"]];
       let total = 0;
 
-
       history.forEach((entry) => {
         if (typeof entry !== "string") return;  // เช็คก่อนว่า entry เป็น string
-
 
         const match = entry.match(/(ฝาก|ถอน)\s([\d.]+)\sบาท\s\((.+)\)/);
         if (match) {
@@ -121,21 +119,18 @@
         }
       });
 
-
       wsData.push(["", "รวม", total]);
-
 
       const worksheet = XLSX.utils.aoa_to_sheet(wsData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "ประวัติรายการ");
 
+      // แปลงชื่อผู้ใช้ให้เหมาะสมกับการเป็นชื่อไฟล์
+      const safeFileName = `history_${userName.replace(/\s+/g, "_").replace(/[^\w\-ก-๙]/g, "")}.xlsx`;
 
-      XLSX.writeFile(workbook, `history_${currentId}.xlsx`);
+      XLSX.writeFile(workbook, safeFileName);
     }
     window.exportHistoryToExcel = exportHistoryToExcel;
-
-
-
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import {
@@ -148,8 +143,6 @@
       onValue
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
     import * as XLSX from "https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs";
-
-
 
 
     const firebaseConfig = {
@@ -302,9 +295,6 @@
       updateStudentView(currentId, data);
     };
 
-
-
-
     window.withdraw = async () => {
       const amt = parseFloat($("amount").value);
       const refPath = ref(db, `accounts/${currentId}`);
@@ -344,15 +334,11 @@
       updateStudentView(currentId, data);
     };
 
-
-
-
     window.logout = () => {
       currentId = null;
       currentName = "";
       startApp();
     };
-
 
     window.deleteAccount = async () => {
       if (confirm("คุณต้องการลบบัญชีนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้!")) {
@@ -361,7 +347,6 @@
         logout();
       }
     };
-
 
     window.updateAdminView = () => {
       const container = $("app");
@@ -550,7 +535,8 @@
       const worksheet = XLSX.utils.aoa_to_sheet(rows);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "บัญชีทั้งหมด");
-
+      const safeName = typeof userName === "string" ? userName : "unknown_user";
+      const safeFileName = `history_${safeName.replace(/\s+/g, "_").replace(/[^\w\-ก-๙]/g, "")}.xlsx`;
 
       XLSX.writeFile(workbook, "บัญชีทั้งหมด.xlsx");
     };
@@ -571,28 +557,25 @@
       if (!snap.exists()) return;
       const data = snap.val();
 
-
       $("app").style.display = "none";
       const historyDiv = $("historyPage");
       const historyList = $("historyList");
       historyList.innerHTML = "";
 
-
-      // ลบปุ่มส่งออกที่อาจซ้ำอยู่ก่อน
       const existingExport = document.getElementById("exportBtn");
       if (existingExport) existingExport.remove();
 
+      // ✅ ดึงชื่อผู้ใช้อย่างปลอดภัย
+      const userName = data.name || "ไม่ทราบชื่อ";
 
-      // เพิ่มปุ่มส่งออกประวัติ
-      // เพิ่มปุ่มส่งออก Excel
+      // ✅ เพิ่มปุ่มส่งออก พร้อมส่งชื่อ
       const exportBtn = document.createElement("button");
       exportBtn.textContent = "ส่งออกประวัติ (.xlsx)";
       exportBtn.id = "exportBtn";
-      exportBtn.onclick = () => exportHistoryToExcel(data.history);
+      exportBtn.onclick = () => exportHistoryToExcel(data.history, userName);
       historyDiv.appendChild(exportBtn);
 
-
-      if (data.history.length === 0) {
+      if (!data.history || data.history.length === 0) {
         historyList.innerHTML = "<li>ไม่มีรายการ</li>";
       } else {
         data.history.forEach(item => {
@@ -601,7 +584,6 @@
           historyList.appendChild(li);
         });
       }
-
 
       historyDiv.style.display = "block";
     };

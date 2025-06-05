@@ -96,7 +96,7 @@
     }
   </style>
   <script type="module">
-    const WISA_VERSION = "v1.4.1"; // เวอร์ชันปัจจุบัน
+    const WISA_VERSION = "v1.4.2"; // เวอร์ชันปัจจุบัน
     document.getElementById("wisa-version").textContent = WISA_VERSION;
     window.WISA_VERSION = WISA_VERSION; // ให้ HTML มองเห็น
 
@@ -385,9 +385,8 @@
         let totalBalance = 0;
 
 
-        // เรียงชื่อผู้ใช้ตามลำดับ ก-ฮ
-        const sortedEntries = Object.entries(data).sort(([, a], [, b]) =>
-          a.name.localeCompare(b.name, 'th') // เรียงตามภาษาไทย
+        const sortedEntries = Object.entries(data).sort((a, b) =>
+          Number(a[0]) - Number(b[0])
         );
 
 

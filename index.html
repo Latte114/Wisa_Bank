@@ -96,7 +96,7 @@
     }
   </style>
   <script type="module">
-    const WISA_VERSION = "v1.4.2"; // เวอร์ชันปัจจุบัน
+    const WISA_VERSION = "v1.4.3"; // เวอร์ชันปัจจุบัน
     document.getElementById("wisa-version").textContent = WISA_VERSION;
     window.WISA_VERSION = WISA_VERSION; // ให้ HTML มองเห็น
 
@@ -708,40 +708,74 @@
       const totalSum = document.getElementById("totalSum");
       totalSum.textContent = `ยอดรวมสุทธิของรายการที่ค้นหา: ${totalFilteredBalance} บาท`;
     }
+
     window.editUserName = function (id, oldName) {
       const newName = prompt("กรุณากรอกชื่อใหม่:", oldName);
-      if (newName && newName !== oldName) {
-        update(ref(db, `users/${id}`), { name: newName })
+      if (newName && newName.trim() !== "" && newName !== oldName) {
+
+        update(ref(db, `accounts/${id}`), { name: newName })
           .then(() => {
             alert("อัปเดตชื่อสำเร็จ");
             updateAdminView();
           })
           .catch((error) => {
-            console.error("เกิดข้อผิดพลาด:", error);
+            console.error("เกิดข้อผิดพลาดในการอัปเดตชื่อ:", error);
+            alert("เกิดข้อผิดพลาดในการอัปเดตชื่อ: " + error.message);
           });
+      } else if (newName !== null && newName.trim() === "") {
+        alert("ชื่อใหม่ต้องไม่เป็นค่าว่าง");
       }
     };
-
 
     window.editUserId = function (oldId) {
       const newId = prompt("กรุณากรอกเลขประจำตัวใหม่:", oldId);
-      if (newId && newId !== oldId) {
-        get(child(dbRef, `users/${oldId}`)).then((snapshot) => {
-          if (snapshot.exists()) {
-            const userData = snapshot.val();
-            set(ref(db, `users/${newId}`), userData).then(() => {
-              remove(ref(db, `users/${oldId}`)).then(() => {
-                alert("อัปเดตเลขประจำตัวสำเร็จ");
-                updateAdminView();
-              });
-            });
-          }
-        });
+      if (newId && newId.trim() !== "" && newId !== oldId) {
+
+        get(ref(db, `accounts/${newId}`))
+          .then((snapshot) => {
+            if (snapshot.exists()) {
+              alert("รหัสประจำตัวใหม่นี้มีอยู่แล้ว กรุณาเลือกอันอื่น");
+            } else {
+
+              get(ref(db, `accounts/${oldId}`))
+                .then((oldUserDataSnapshot) => {
+                  if (oldUserDataSnapshot.exists()) {
+                    const userData = oldUserDataSnapshot.val();
+
+                    set(ref(db, `accounts/${newId}`), userData)
+                      .then(() => {
+                        remove(ref(db, `accounts/${oldId}`))
+                          .then(() => {
+                            alert("อัปเดตเลขประจำตัวสำเร็จ");
+                            updateAdminView();
+                          })
+                          .catch((error) => {
+                            console.error("เกิดข้อผิดพลาดในการลบรหัสเก่า:", error);
+                            alert("เกิดข้อผิดพลาดในการลบรหัสเก่า: " + error.message);
+                          });
+                      })
+                      .catch((error) => {
+                        console.error("เกิดข้อผิดพลาดในการตั้งค่ารหัสใหม่:", error);
+                        alert("เกิดข้อผิดพลาดในการตั้งค่ารหัสใหม่: " + error.message);
+                      });
+                  } else {
+                    alert("ไม่พบข้อมูลบัญชีเก่า");
+                  }
+                })
+                .catch((error) => {
+                  console.error("เกิดข้อผิดพลาดในการดึงข้อมูลบัญชีเก่า:", error);
+                  alert("เกิดข้อผิดพลาดในการดึงข้อมูลบัญชีเก่า: " + error.message);
+                });
+            }
+          })
+          .catch((error) => {
+            console.error("เกิดข้อผิดพลาดในการตรวจสอบรหัสใหม่:", error);
+            alert("เกิดข้อผิดพลาดในการตรวจสอบรหัสใหม่: " + error.message);
+          });
+      } else if (newId !== null && newId.trim() === "") {
+        alert("เลขประจำตัวใหม่ต้องไม่เป็นค่าว่าง");
       }
     };
-
-
-
 
   </script>
 </head>
@@ -781,8 +815,6 @@
     Wisa Bank Version <span id="wisa-version"></span>
   </div>
 
-
 </body>
-
 
 </html>

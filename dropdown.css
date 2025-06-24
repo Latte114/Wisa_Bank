@@ -1,0 +1,72 @@
+/* --- Dropdown Button --- */
+.dropbtn {
+  background-color: #007bff;
+  color: white;
+  padding: 18px; /* Increased padding */
+  font-size: 1.1em; /* Increased font size */
+  border: none;
+  cursor: pointer;
+  border-radius: 6px; /* Slightly larger border radius */
+}
+
+/* คอนเทนต์ของ Dropdown (ซ่อนอยู่โดยค่าเริ่มต้น) */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #1c2c42; /* Changed background to match theme */
+  min-width: 180px; /* Increased width */
+  box-shadow: 0px 10px 20px 0px rgba(0,0,0,0.3); /* Larger shadow */
+  z-index: 1;
+  border-radius: 8px; /* Larger border radius */
+  overflow: hidden;
+  border: 1px solid #2d4564; /* Added border */
+}
+
+/* ลิงก์ภายใน Dropdown */
+.dropdown-content a {
+  color: #e0e6ed; /* Changed text color to match theme */
+  padding: 15px 20px; /* Increased padding */
+  text-decoration: none;
+  display: block;
+  text-align: left;
+  font-size: 1.05em; /* Increased font size */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* เปลี่ยนสีลิงก์ Dropdown เมื่อวางเมาส์ */
+.dropdown-content a:hover {
+  background-color: #354e6e; /* Darker hover background */
+  color: #a0c2e6; /* Lighter text on hover */
+}
+
+/* แสดง Dropdown menu เมื่อวางเมาส์ที่ปุ่ม Dropdown */
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* เปลี่ยนสีพื้นหลังของปุ่ม Dropdown เมื่อแสดงเนื้อหา Dropdown */
+.dropdown:hover .dropbtn {
+  background-color: #0056b3;
+}
+
+/* คลาสสำหรับแสดง Dropdown */
+.show {
+  display: block;
+}
+
+/* Responsive adjustments for dropdown if needed */
+@media (max-width: 768px) {
+  .dropbtn {
+    padding: 15px; /* Smaller padding on mobile */
+    font-size: 1em; /* Smaller font size on mobile */
+  }
+
+  .dropdown-content {
+    min-width: 150px; /* Smaller width on mobile */
+  }
+
+  .dropdown-content a {
+    padding: 12px 15px; /* Smaller padding on mobile */
+    font-size: 0.95em; /* Smaller font size on mobile */
+  }
+}

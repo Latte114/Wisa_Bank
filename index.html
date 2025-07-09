@@ -32,7 +32,7 @@
     >
       <h2>ประวัติการทำรายการ</h2>
       <ul id="historyList" class="history-list"></ul>
-      <button class="button" onclick="backToMain()">ย้อนกลับ</button>
+      <button class="button" onclick="window.backToMain()">ย้อนกลับ</button>
     </div>
 
     <div
@@ -42,7 +42,7 @@
     >
       <h2>ประวัติการทำรายการนักเรียน: <span id="studentHistoryName"></span></h2>
       <ul id="studentHistoryList" class="history-list"></ul>
-      <button class="button" onclick="backToAdminPage()">
+      <button class="button" onclick="window.backToAdminPage()">
         ย้อนกลับไปหน้า Admin
       </button>
     </div>
@@ -58,7 +58,7 @@
         <p><strong>ยอดถอนรวม:</strong> <span id="totalWithdrawalAmount">0.00</span> บาท</p>
       </div>
       <ul id="dateSearchResult" class="history-list"></ul>
-      <button class="button" onclick="backToMain()">ย้อนกลับ</button>
+      <button class="button" onclick="window.backToMain()">ย้อนกลับ</button>
     </div>
 
     <div
@@ -86,13 +86,13 @@
         />
       </div>
       <div class="button-group">
-        <button class="button button--success" onclick="performDeposit()">
+        <button class="button button--success" onclick="window.performDeposit()">
           ฝากเงิน
         </button>
-        <button class="button button--danger" onclick="performWithdraw()">
+        <button class="button button--danger" onclick="window.performWithdraw()">
           ถอนเงิน
         </button>
-        <button class="button" onclick="backFromTransaction()">ยกเลิก</button>
+        <button class="button" onclick="window.backFromTransaction()">ยกเลิก</button>
       </div>
       <p id="transactionMessage" class="message" style="display: none"></p>
     </div>
@@ -114,7 +114,7 @@
         <input type="date" id="adminDateFilter" class="filter-input" />
       </div>
       <ul id="adminHistoryList" class="admin-history-list"></ul>
-      <button class="button" onclick="backToMainFromAdminHistory()">
+      <button class="button" onclick="window.backToMainFromAdminHistory()">
         ย้อนกลับ
       </button>
     </div>
@@ -135,10 +135,10 @@
         id="historyEditTextArea"
         placeholder="แก้ไขประวัติรายการแต่ละบรรทัด..."
       ></textarea>
-      <button class="button button--success" onclick="saveStudentHistory()">
+      <button class="button button--success" onclick="window.saveStudentHistory()">
         บันทึกการแก้ไข
       </button>
-      <button class="button" onclick="backFromStudentHistoryEdit()">
+      <button class="button" onclick="window.backFromStudentHistoryEdit()">
         ย้อนกลับ
       </button>
     </div>
@@ -257,7 +257,7 @@
       }
 
       window.onload = () => {
-        showLogin();
+        window.showLogin();
       };
 
       window.showRegister = () => {
@@ -271,7 +271,7 @@
           <label for="registerName">ชื่อ-นามสกุล:</label>
           <input type="text" id="registerName" placeholder="ชื่อ-นามสกุล" class="input-field"/>
         </div>
-        <button class="button" onclick="register()">สร้างบัญชี</button>
+        <button class="button" onclick="window.register()">สร้างบัญชี</button>
       `;
       };
 
@@ -311,8 +311,8 @@
           if (currentId) {
             logAdminAction("create_account", `สร้างบัญชี: ${name} (ID: ${id})`);
           }
-          if (currentId === "headadmin123") updateHeadAdminView();
-          else updateAdminView();
+          if (currentId === "headadmin123") window.updateHeadAdminView();
+          else window.updateAdminView();
         } catch (error) {
           alert("เกิดข้อผิดพลาดในการสร้างบัญชี: " + error.message);
           console.error("Error registering account:", error);
@@ -332,7 +332,7 @@
             <input type="password" id="password" class="input-field" />
           </div>
           <div class="button-group">
-            <button class="button" onclick="login()">เข้าสู่ระบบ</button>
+            <button class="button" onclick="window.login()">เข้าสู่ระบบ</button>
           </div>
         </div>
       `;
@@ -351,7 +351,7 @@
           if (password === "headadmin123") {
             currentId = id;
             currentName = "Head Admin";
-            updateHeadAdminView();
+            window.updateHeadAdminView();
             return;
           } else {
             alert("รหัสผ่าน Head Admin ไม่ถูกต้อง");
@@ -363,7 +363,7 @@
           if (password === "admin123") {
             currentId = id;
             currentName = "Admin หลัก";
-            updateAdminView();
+            window.updateAdminView();
             return;
           } else {
             alert("รหัสผ่าน Admin หลักไม่ถูกต้อง");
@@ -378,7 +378,7 @@
             if (password === adminData.password) {
               currentId = id;
               currentName = adminData.name;
-              updateAdminView();
+              window.updateAdminView();
               return;
             } else {
               alert("รหัสผ่านแอดมินไม่ถูกต้อง");
@@ -534,7 +534,7 @@
         currentId = null;
         currentName = "";
         currentStudentToManage = null;
-        showLogin();
+        window.showLogin();
       };
 
       window.deleteAccount = async (idToDelete) => {
@@ -557,11 +557,11 @@
             );
 
             if (currentId === "headadmin123") {
-              updateHeadAdminView();
+              window.updateHeadAdminView();
             } else if (currentId) {
-              updateAdminView();
+              window.updateAdminView();
             } else {
-              showLogin();
+              window.showLogin();
             }
           } catch (error) {
             alert("เกิดข้อผิดพลาดในการลบบัญชี: " + error.message);
@@ -585,7 +585,7 @@
         primaryActions.className = "admin-section";
         primaryActions.innerHTML = `
         <h3>⭐ จัดการระบบหลัก</h3>
-        <button class="button button--success margin-bottom-sm" onclick="showRegister()">➕ สร้างบัญชีใหม่</button>
+        <button class="button button--success margin-bottom-sm" onclick="window.showRegister()">➕ สร้างบัญชีใหม่</button>
       `;
         container.appendChild(primaryActions);
 
@@ -593,8 +593,8 @@
         adminManageSection.className = "admin-section";
         adminManageSection.innerHTML = `
         <h3>👑 จัดการบัญชีแอดมิน</h3>
-        <button class="button button--success margin-bottom-sm" onclick="addAdmin()">➕ เพิ่มแอดมินใหม่</button>
-        <button class="button button--secondary" onclick="showAdminHistory()">📜 ดูประวัติแอดมิน</button>
+        <button class="button button--success margin-bottom-sm" onclick="window.addAdmin()">➕ เพิ่มแอดมินใหม่</button>
+        <button class="button button--secondary" onclick="window.showAdminHistory()">📜 ดูประวัติแอดมิน</button>
         <div id="adminList" class="admin-list-container"></div>
       `;
         container.appendChild(adminManageSection);
@@ -615,7 +615,7 @@
         const searchBtn = document.createElement("button");
         searchBtn.textContent = "🔍 ค้นหารายการตามวันที่";
         searchBtn.className = "button";
-        searchBtn.onclick = () => searchByDate(dateInput.value);
+        searchBtn.onclick = () => window.searchByDate(dateInput.value);
 
         dateSearchDiv.appendChild(dateInput);
         dateSearchDiv.appendChild(searchBtn);
@@ -664,29 +664,29 @@
             menu.className = "user-card__menu";
 
             const btns = [
-              ["📜 ดูประวัติ", () => showStudentHistory(id), "button", ""],
+              ["📜 ดูประวัติ", () => window.showStudentHistory(id), "button", ""],
               [
                 "✏️ แก้ไขประวัติ",
-                () => editStudentHistory(id),
+                () => window.editStudentHistory(id),
                 "button button--warning",
                 "",
               ],
               [
                 "💰 ฝาก/ถอนเงิน",
-                () => showTransactionPage(id),
+                () => window.showTransactionPage(id),
                 "button button--success",
                 "",
               ],
               [
                 "✏️ แก้ไขชื่อ",
-                () => editUserName(id, user.name),
+                () => window.editUserName(id, user.name),
                 "button button--purple",
                 "",
               ],
-              ["🆔 แก้ไข ID", () => editUserId(id), "button button--info", ""],
+              ["🆔 แก้ไข ID", () => window.editUserId(id), "button button--info", ""],
               [
                 "🗑️ ลบบัญชี",
-                () => deleteAccount(id),
+                () => window.deleteAccount(id),
                 "button button--danger",
                 "",
               ],
@@ -714,13 +714,13 @@
         const exportBtn = document.createElement("button");
         exportBtn.textContent = "📤 ส่งออกบัญชีทั้งหมด (Excel)";
         exportBtn.className = "button";
-        exportBtn.onclick = exportAllAccountsToExcel;
+        exportBtn.onclick = window.exportAllAccountsToExcel;
         container.appendChild(exportBtn);
 
         const logoutBtn = document.createElement("button");
         logoutBtn.textContent = "ออกจากระบบ";
         logoutBtn.className = "button button--danger";
-        logoutBtn.onclick = logout;
+        logoutBtn.onclick = window.logout;
         container.appendChild(logoutBtn);
       };
 
@@ -757,13 +757,13 @@
           const editPassBtn = document.createElement("button");
           editPassBtn.textContent = "✏️ แก้รหัส";
           editPassBtn.className = "button button--warning";
-          editPassBtn.onclick = () => editAdminPassword(adminId, adminName);
+          editPassBtn.onclick = () => window.editAdminPassword(adminId, adminName);
           actionButtons.appendChild(editPassBtn);
 
           const deleteBtn = document.createElement("button");
           deleteBtn.textContent = "🗑️ ลบ";
           deleteBtn.className = "button button--danger";
-          deleteBtn.onclick = () => deleteAdminAccount(adminId);
+          deleteBtn.onclick = () => window.deleteAdminAccount(adminId);
           actionButtons.appendChild(deleteBtn);
 
           li.appendChild(actionButtons);
@@ -963,9 +963,9 @@
         $("adminHistoryPage").style.display = "none";
         $("app").style.display = "block";
         if (currentId === "headadmin123") {
-          updateHeadAdminView();
+          window.updateHeadAdminView();
         } else {
-          updateAdminView();
+          window.updateAdminView();
         }
       };
 
@@ -978,7 +978,7 @@
         primaryActions.className = "admin-section";
         primaryActions.innerHTML = `
           <h3>💡 เลือกฟังก์ชัน</h3>
-          <button class="button button--success margin-bottom-sm" onclick="showRegister()">➕ สร้างบัญชีใหม่</button>
+          <button class="button button--success margin-bottom-sm" onclick="window.showRegister()">➕ สร้างบัญชีใหม่</button>
         `;
         container.appendChild(primaryActions);
 
@@ -996,7 +996,7 @@
         const searchBtn = document.createElement("button");
         searchBtn.textContent = "🔍 ค้นหารายการตามวันที่";
         searchBtn.className = "button";
-        searchBtn.onclick = () => searchByDate(dateInput.value);
+        searchBtn.onclick = () => window.searchByDate(dateInput.value);
 
         dateSearchDiv.appendChild(dateInput);
         dateSearchDiv.appendChild(searchBtn);
@@ -1038,10 +1038,10 @@
             menu.className = "user-card__menu";
 
             const btns = [
-              ["📜 ดูประวัติ", () => showStudentHistory(id), "button", ""],
+              ["📜 ดูประวัติ", () => window.showStudentHistory(id), "button", ""],
               [
                 "💰 ฝาก/ถอนเงิน",
-                () => showTransactionPage(id),
+                () => window.showTransactionPage(id),
                 "button button--success",
                 "",
               ],
@@ -1065,7 +1065,7 @@
         const logoutBtn = document.createElement("button");
         logoutBtn.textContent = "ออกจากระบบ";
         logoutBtn.className = "button button--danger";
-        logoutBtn.onclick = logout;
+        logoutBtn.onclick = window.logout;
         container.appendChild(logoutBtn);
       };
 
@@ -1155,58 +1155,243 @@
         }
       };
 
-      // Function to filter admin logs
-      window.filterAdminLogs = async () => {
-        const adminFilterSelect = $("adminFilterSelect");
-        const adminDateFilter = $("adminDateFilter");
-        const adminHistoryList = $("adminHistoryList");
-
-        const selectedAdminId = adminFilterSelect.value;
-        const selectedDate = adminDateFilter.value;
-        const searchDateFormatted = formatDateForComparison(selectedDate);
-
-        adminHistoryList.innerHTML = ""; // Clear current list
+      // Function to show the transaction page
+      window.showTransactionPage = async (studentId) => {
+        currentTransactionStudentId = studentId; // Store the student ID
+        $("app").style.display = "none";
+        $("transactionPage").style.display = "block";
+        $("transactionMessage").style.display = "none"; // Hide message initially
 
         try {
-          const logsSnapshot = await get(ref(db, "admin_logs"));
-          const logs = logsSnapshot.val() || {};
-          let foundLogs = false;
-
-          // Convert logs object to an array and sort by timestamp in descending order
-          const sortedLogs = Object.values(logs).sort((a, b) => {
-            return new Date(b.timestamp) - new Date(a.timestamp);
-          });
-
-          sortedLogs.forEach(log => {
-            const logDate = new Date(log.timestamp).toLocaleDateString("th-TH");
-            const logAdminId = log.adminId;
-
-            const matchesAdmin = selectedAdminId === "all" || logAdminId === selectedAdminId;
-            const matchesDate = !selectedDate || logDate === searchDateFormatted;
-
-            if (matchesAdmin && matchesDate) {
-              foundLogs = true;
-              const listItem = document.createElement("li");
-              listItem.className = "admin-log-item account-item"; // Reuse existing styles
-              listItem.innerHTML = `
-                <div class="account-name"><strong>Admin:</strong> ${log.adminId}</div>
-                <div class="account-id"><strong>Action:</strong> ${log.actionType}</div>
-                <div class="account-id"><strong>Details:</strong> ${JSON.stringify(log.details)}</div>
-                <div class="account-id"><strong>Date:</strong> ${logDate}</div>
-                <div class="account-id"><strong>Time:</strong> ${new Date(log.timestamp).toLocaleTimeString("th-TH")}</div>
-              `;
-              adminHistoryList.appendChild(listItem);
-            }
-          });
-
-          if (!foundLogs) {
-            adminHistoryList.innerHTML = '<p class="text-muted text-center">ไม่พบบันทึกการกระทำสำหรับเงื่อนไขที่เลือก</p>';
+          const snap = await get(ref(db, `accounts/${studentId}`));
+          if (snap.exists()) {
+            const studentData = snap.val();
+            $("transactionStudentName").textContent = studentData.name;
+            $("transactionStudentId").textContent = studentId;
+            $("transactionStudentBalance").textContent = studentData.balance.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          } else {
+            alert("ไม่พบข้อมูลนักเรียน");
+            window.backFromTransaction();
           }
         } catch (error) {
-          console.error("Error filtering admin logs:", error);
-          adminHistoryList.innerHTML = '<p class="text-muted text-center">เกิดข้อผิดพลาดในการโหลดบันทึกแอดมิน</p>';
+          alert("เกิดข้อผิดพลาดในการดึงข้อมูลนักเรียน: " + error.message);
+          console.error("Error fetching student data for transaction:", error);
+          window.backFromTransaction();
         }
       };
+
+      window.backFromTransaction = () => {
+        $("transactionPage").style.display = "none";
+        $("app").style.display = "block";
+        $("transactionAmount").value = ""; // Clear amount
+        $("transactionMessage").style.display = "none"; // Hide message
+        if (currentId === "headadmin123") {
+          window.updateHeadAdminView();
+        } else {
+          window.updateAdminView();
+        }
+      };
+
+      window.showStudentHistory = async (studentId) => {
+        currentStudentToManage = studentId;
+        $("app").style.display = "none";
+        $("studentHistoryPage").style.display = "block";
+        const historyList = $("studentHistoryList");
+        historyList.innerHTML = "";
+        try {
+          const snap = await get(ref(db, `accounts/${studentId}`));
+          if (snap.exists()) {
+            const data = snap.val();
+            $("studentHistoryName").textContent = data.name;
+            if (data.history && data.history.length > 0) {
+              data.history.forEach((entry) => {
+                const li = document.createElement("li");
+                li.textContent = entry;
+                historyList.appendChild(li);
+              });
+            } else {
+              historyList.innerHTML = "<li class='text-muted'>ไม่มีประวัติการทำรายการ</li>";
+            }
+          } else {
+            historyList.innerHTML = "<li class='text-muted'>ไม่พบข้อมูลนักเรียน</li>";
+          }
+        } catch (error) {
+          alert("เกิดข้อผิดพลาดในการดึงประวัติ: " + error.message);
+          console.error("Error fetching student history:", error);
+        }
+      };
+
+      window.backToAdminPage = () => {
+        $("studentHistoryPage").style.display = "none";
+        $("app").style.display = "block";
+        if (currentId === "headadmin123") {
+          window.updateHeadAdminView();
+        } else {
+          window.updateAdminView();
+        }
+      };
+
+      window.backToMain = () => {
+        $("historyPage").style.display = "none";
+        $("dateSearchPage").style.display = "none";
+        $("app").style.display = "block";
+        if (currentId === "headadmin123") {
+          window.updateHeadAdminView();
+        } else {
+          window.updateAdminView();
+        }
+      };
+
+      window.editStudentHistory = async (studentId) => {
+        currentStudentToManage = studentId;
+        $("app").style.display = "none";
+        $("studentHistoryEditPage").style.display = "block";
+        $("historyEditTextArea").value = ""; // Clear previous content
+        try {
+          const snap = await get(ref(db, `accounts/${studentId}`));
+          if (snap.exists()) {
+            const data = snap.val();
+            $("historyEditStudentName").textContent = data.name;
+            $("historyEditStudentId").textContent = studentId;
+            if (Array.isArray(data.history) && data.history.length > 0) {
+              $("historyEditTextArea").value = data.history.join("\n");
+            } else {
+              $("historyEditTextArea").value = "ไม่มีประวัติการทำรายการ";
+            }
+          } else {
+            alert("ไม่พบข้อมูลนักเรียน");
+            window.backFromStudentHistoryEdit();
+          }
+        } catch (error) {
+          alert("เกิดข้อผิดพลาดในการดึงประวัติเพื่อแก้ไข: " + error.message);
+          console.error("Error fetching history for edit:", error);
+        }
+      };
+
+      window.saveStudentHistory = async () => {
+        const studentId = currentStudentToManage;
+        const newHistoryText = $("historyEditTextArea").value;
+        let newHistoryArray = [];
+        if (newHistoryText && newHistoryText.trim() !== "ไม่มีประวัติการทำรายการ") {
+          newHistoryArray = newHistoryText.split("\n").map(line => line.trim()).filter(line => line !== "");
+        }
+
+        try {
+          await update(ref(db, `accounts/${studentId}`), { history: newHistoryArray });
+          alert("บันทึกประวัติการแก้ไขเรียบร้อยแล้ว");
+          logAdminAction("edit_student_history", {
+            studentId: studentId,
+            oldHistory: "โปรดดูจาก log เก่า", // Can't store full old history here easily without another fetch
+            newHistory: newHistoryArray.join(" | ")
+          });
+          window.backFromStudentHistoryEdit();
+        } catch (error) {
+          alert("เกิดข้อผิดพลาดในการบันทึกประวัติ: " + error.message);
+          console.error("Error saving student history:", error);
+        }
+      };
+
+      window.backFromStudentHistoryEdit = () => {
+        $("studentHistoryEditPage").style.display = "none";
+        $("app").style.display = "block";
+        if (currentId === "headadmin123") {
+          window.updateHeadAdminView();
+        } else {
+          window.updateAdminView();
+        }
+      };
+
+      window.editUserName = async (studentId, currentStudentName) => {
+        const newName = prompt(`กรุณากรอกชื่อ-นามสกุลใหม่สำหรับ ${currentStudentName} (ID: ${studentId}):`, currentStudentName);
+        if (newName === null || newName.trim() === "") {
+          alert("ชื่อ-นามสกุลไม่สามารถเป็นค่าว่างได้");
+          return;
+        }
+
+        try {
+          await update(ref(db, `accounts/${studentId}`), { name: newName });
+          alert(`แก้ไขชื่อ-นามสกุลของ ${currentStudentName} (ID: ${studentId}) เป็น ${newName} เรียบร้อยแล้ว`);
+          logAdminAction("edit_user_name", {
+            studentId: studentId,
+            oldName: currentStudentName,
+            newName: newName
+          });
+          if (currentId === "headadmin123") {
+            window.updateHeadAdminView();
+          } else {
+            window.updateAdminView();
+          }
+        } catch (error) {
+          alert("เกิดข้อผิดพลาดในการแก้ไขชื่อ-นามสกุล: " + error.message);
+          console.error("Error editing user name:", error);
+        }
+      };
+
+      window.editUserId = async (oldStudentId) => {
+        const newStudentId = prompt(`กรุณากรอก ID นักเรียนใหม่สำหรับ ${oldStudentId}: (ไม่สามารถย้อนกลับได้)`, oldStudentId);
+
+        if (newStudentId === null || newStudentId.trim() === "" || newStudentId === oldStudentId) {
+          alert("ID ใหม่ไม่ถูกต้อง หรือซ้ำกับ ID เดิม");
+          return;
+        }
+
+        // Check if new ID already exists in accounts or admins
+        try {
+          const newAccountSnap = await get(ref(db, `accounts/${newStudentId}`));
+          if (newAccountSnap.exists()) {
+            alert("ID นักเรียนใหม่นี้มีอยู่ในระบบบัญชีแล้ว กรุณาเลือก ID อื่น");
+            return;
+          }
+          const newAdminSnap = await get(ref(db, `admins/${newStudentId}`));
+          if (newAdminSnap.exists()) {
+            alert("ID นักเรียนใหม่นี้มีอยู่ในระบบแอดมินแล้ว กรุณาเลือก ID อื่น");
+            return;
+          }
+        } catch (error) {
+          console.error("Error checking new ID existence:", error);
+          alert("เกิดข้อผิดพลาดในการตรวจสอบ ID ใหม่: " + error.message);
+          return;
+        }
+
+        if (!confirm(`คุณแน่ใจหรือไม่ที่ต้องการเปลี่ยน ID จาก ${oldStudentId} เป็น ${newStudentId} การกระทำนี้ไม่สามารถย้อนกลับได้!`)) {
+          return;
+        }
+
+        try {
+          const oldAccountRef = ref(db, `accounts/${oldStudentId}`);
+          const oldAccountSnap = await get(oldAccountRef);
+
+          if (!oldAccountSnap.exists()) {
+            alert("ไม่พบข้อมูลบัญชีเก่า");
+            return;
+          }
+
+          const accountData = oldAccountSnap.val();
+
+          // 1. Create new account with new ID
+          await set(ref(db, `accounts/${newStudentId}`), accountData);
+
+          // 2. Delete old account
+          await remove(oldAccountRef);
+
+          alert(`เปลี่ยน ID บัญชีจาก ${oldStudentId} เป็น ${newStudentId} เรียบร้อยแล้ว`);
+          logAdminAction("edit_user_id", {
+            oldId: oldStudentId,
+            newId: newStudentId,
+            studentName: accountData.name
+          });
+
+          if (currentId === "headadmin123") {
+            window.updateHeadAdminView();
+          } else {
+            window.updateAdminView();
+          }
+        } catch (error) {
+          alert("เกิดข้อผิดพลาดในการแก้ไข ID: " + error.message);
+          console.error("Error editing user ID:", error);
+        }
+      };
+
 
       // Ensure the filterAdminLogs is called when the date or admin selection changes
       document.addEventListener('DOMContentLoaded', () => {

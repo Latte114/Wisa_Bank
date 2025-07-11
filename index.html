@@ -54,8 +54,14 @@
     >
       <h2>ผลการค้นหาตามวันที่</h2>
       <div class="summary-box">
-        <p><strong>ยอดฝากรวม:</strong> <span id="totalDepositAmount">0.00</span> บาท</p>
-        <p><strong>ยอดถอนรวม:</strong> <span id="totalWithdrawalAmount">0.00</span> บาท</p>
+        <p>
+          <strong>ยอดฝากรวม:</strong>
+          <span id="totalDepositAmount">0.00</span> บาท
+        </p>
+        <p>
+          <strong>ยอดถอนรวม:</strong>
+          <span id="totalWithdrawalAmount">0.00</span> บาท
+        </p>
       </div>
       <ul id="dateSearchResult" class="history-list"></ul>
       <button class="button" onclick="window.backToMain()">ย้อนกลับ</button>
@@ -86,13 +92,21 @@
         />
       </div>
       <div class="button-group">
-        <button class="button button--success" onclick="window.performDeposit()">
+        <button
+          class="button button--success"
+          onclick="window.performDeposit()"
+        >
           ฝากเงิน
         </button>
-        <button class="button button--danger" onclick="window.performWithdraw()">
+        <button
+          class="button button--danger"
+          onclick="window.performWithdraw()"
+        >
           ถอนเงิน
         </button>
-        <button class="button" onclick="window.backFromTransaction()">ยกเลิก</button>
+        <button class="button" onclick="window.backFromTransaction()">
+          ยกเลิก
+        </button>
       </div>
       <p id="transactionMessage" class="message" style="display: none"></p>
     </div>
@@ -135,7 +149,10 @@
         id="historyEditTextArea"
         placeholder="แก้ไขประวัติรายการแต่ละบรรทัด..."
       ></textarea>
-      <button class="button button--success" onclick="window.saveStudentHistory()">
+      <button
+        class="button button--success"
+        onclick="window.saveStudentHistory()"
+      >
         บันทึกการแก้ไข
       </button>
       <button class="button" onclick="window.backFromStudentHistoryEdit()">
@@ -236,16 +253,27 @@
           ];
           for (const id in accounts) {
             const account = accounts[id];
-            const historyText = Array.isArray(account.history) ? account.history.join(" | ") : "";
+            const historyText = Array.isArray(account.history)
+              ? account.history.join(" | ")
+              : "";
             wsData.push([id, account.name, account.balance, historyText]);
           }
           const worksheet = XLSX.utils.aoa_to_sheet(wsData);
           const workbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(workbook, worksheet, "ข้อมูลบัญชีทั้งหมด");
-          const safeFileName = `all_accounts_${new Date().toLocaleDateString("th-TH").replace(/\//g, "-")}.xlsx`;
+          XLSX.utils.book_append_sheet(
+            workbook,
+            worksheet,
+            "ข้อมูลบัญชีทั้งหมด"
+          );
+          const safeFileName = `all_accounts_${new Date()
+            .toLocaleDateString("th-TH")
+            .replace(/\//g, "-")}.xlsx`;
           XLSX.writeFile(workbook, safeFileName);
           alert("ส่งออกข้อมูลบัญชีทั้งหมดเรียบร้อยแล้ว");
-          logAdminAction("export_all_accounts", "ส่งออกข้อมูลบัญชีทั้งหมดไปยัง Excel");
+          logAdminAction(
+            "export_all_accounts",
+            "ส่งออกข้อมูลบัญชีทั้งหมดไปยัง Excel"
+          );
         } catch (error) {
           alert("เกิดข้อผิดพลาดในการส่งออกข้อมูลบัญชี: " + error.message);
           console.error("Error exporting all accounts:", error);
@@ -347,49 +375,40 @@
           return;
         }
 
-        if (id === "headadmin123") {
-          if (password === "headadmin123") {
-            currentId = id;
-            currentName = "Head Admin";
-            window.updateHeadAdminView();
-            return;
-          } else {
-            alert("รหัสผ่าน Head Admin ไม่ถูกต้อง");
-            return;
-          }
-        }
-
-        if (id === "admin123") {
-          if (password === "admin123") {
-            currentId = id;
-            currentName = "Admin หลัก";
-            window.updateAdminView();
-            return;
-          } else {
-            alert("รหัสผ่าน Admin หลักไม่ถูกต้อง");
-            return;
-          }
-        }
-
         try {
           const adminSnap = await get(ref(db, `admins/${id}`));
+
+          // ตรวจสอบข้อมูลผู้ดูแลระบบจาก Firebase
           if (adminSnap.exists()) {
             const adminData = adminSnap.val();
+
+            // เปรียบเทียบรหัสผ่าน (ตอนนี้รหัสผ่านถูกเก็บใน Firebase แล้ว)
             if (password === adminData.password) {
               currentId = id;
-              currentName = adminData.name;
-              window.updateAdminView();
+              currentName = adminData.name || "Admin"; // ใช้ชื่อจาก Firebase หรือ "Admin" เป็นค่าเริ่มต้น
+
+              // กำหนดบทบาทจาก Firebase
+              const adminRole = adminData.role || "admin";
+
+              // ตรวจสอบบทบาทเพื่ออัพเดตหน้าจอ
+              if (adminRole === "headadmin") {
+                window.updateHeadAdminView();
+              } else {
+                window.updateAdminView();
+              }
               return;
             } else {
-              alert("รหัสผ่านแอดมินไม่ถูกต้อง");
+              alert("รหัสผ่านไม่ถูกต้อง");
               return;
             }
           }
         } catch (error) {
           alert("เกิดข้อผิดพลาดในการเข้าสู่ระบบ: " + error.message);
           console.error("Error logging in:", error);
+          return;
         }
 
+        // กรณีไม่พบ ID ผู้ใช้งานนี้ในระบบ admins
         alert("ไม่พบรหัสผู้ใช้งานนี้ในระบบแอดมิน");
       };
 
@@ -664,7 +683,12 @@
             menu.className = "user-card__menu";
 
             const btns = [
-              ["📜 ดูประวัติ", () => window.showStudentHistory(id), "button", ""],
+              [
+                "📜 ดูประวัติ",
+                () => window.showStudentHistory(id),
+                "button",
+                "",
+              ],
               [
                 "✏️ แก้ไขประวัติ",
                 () => window.editStudentHistory(id),
@@ -683,7 +707,12 @@
                 "button button--purple",
                 "",
               ],
-              ["🆔 แก้ไข ID", () => window.editUserId(id), "button button--info", ""],
+              [
+                "🆔 แก้ไข ID",
+                () => window.editUserId(id),
+                "button button--info",
+                "",
+              ],
               [
                 "🗑️ ลบบัญชี",
                 () => window.deleteAccount(id),
@@ -757,7 +786,8 @@
           const editPassBtn = document.createElement("button");
           editPassBtn.textContent = "✏️ แก้รหัส";
           editPassBtn.className = "button button--warning";
-          editPassBtn.onclick = () => window.editAdminPassword(adminId, adminName);
+          editPassBtn.onclick = () =>
+            window.editAdminPassword(adminId, adminName);
           actionButtons.appendChild(editPassBtn);
 
           const deleteBtn = document.createElement("button");
@@ -915,7 +945,8 @@
         const filterAdminId = $("adminFilterSelect").value;
         const filterDate = $("adminDateFilter").value;
         if (!allLogs) {
-          adminHistoryList.innerHTML = "<li class='admin-history-item'>ไม่มีประวัติการกระทำของแอดมิน</li>";
+          adminHistoryList.innerHTML =
+            "<li class='admin-history-item'>ไม่มีประวัติการกระทำของแอดมิน</li>";
           return;
         }
         const sortedLogs = Object.values(allLogs).sort((a, b) => {
@@ -949,13 +980,16 @@
             <strong>Admin ID:</strong> ${log.adminId}<br>
             <strong>Action:</strong> ${log.actionType}<br>
             <strong>Details:</strong> ${
-              typeof log.details === "object" ? JSON.stringify(log.details) : log.details
+              typeof log.details === "object"
+                ? JSON.stringify(log.details)
+                : log.details
             }
           `;
           adminHistoryList.appendChild(li);
         }
         if (!foundLogs) {
-          adminHistoryList.innerHTML = "<li class='admin-history-list__item'>ไม่พบประวัติการกระทำของแอดมินตามตัวกรองที่เลือก</li>";
+          adminHistoryList.innerHTML =
+            "<li class='admin-history-list__item'>ไม่พบประวัติการกระทำของแอดมินตามตัวกรองที่เลือก</li>";
         }
       }
 
@@ -988,7 +1022,8 @@
         container.appendChild(studentManageSection);
 
         const dateSearchDiv = document.createElement("div");
-        dateSearchDiv.className = "filter-controls flex-column align-center margin-bottom-md";
+        dateSearchDiv.className =
+          "filter-controls flex-column align-center margin-bottom-md";
         const dateInput = document.createElement("input");
         dateInput.type = "date";
         dateInput.id = "searchDate";
@@ -1010,7 +1045,8 @@
             return idA.localeCompare(idB, undefined, { numeric: true });
           });
 
-          const existingStudentCards = studentManageSection.querySelectorAll(".user-card");
+          const existingStudentCards =
+            studentManageSection.querySelectorAll(".user-card");
           existingStudentCards.forEach((card) => card.remove());
 
           for (const [id, user] of sortedEntries) {
@@ -1021,7 +1057,9 @@
             header.className = "user-card__header";
             header.onclick = () => {
               const expanded = menu.classList.toggle("is-expanded");
-              arrow.style.transform = expanded ? "rotate(180deg)" : "rotate(0deg)";
+              arrow.style.transform = expanded
+                ? "rotate(180deg)"
+                : "rotate(0deg)";
             };
 
             const nameElem = document.createElement("span");
@@ -1038,7 +1076,12 @@
             menu.className = "user-card__menu";
 
             const btns = [
-              ["📜 ดูประวัติ", () => window.showStudentHistory(id), "button", ""],
+              [
+                "📜 ดูประวัติ",
+                () => window.showStudentHistory(id),
+                "button",
+                "",
+              ],
               [
                 "💰 ฝาก/ถอนเงิน",
                 () => window.showTransactionPage(id),
@@ -1072,9 +1115,11 @@
       // Helper function to format date from YYYY-MM-DD to DD/MM/YYYY
       function formatDateForComparison(dateString) {
         if (!dateString) return "";
-        const [year, month, day] = dateString.split('-');
+        const [year, month, day] = dateString.split("-");
         // Add 543 to the year for Thai Buddhist Era (B.E.)
-        return `${parseInt(day, 10)}/${parseInt(month, 10)}/${parseInt(year, 10) + 543}`;
+        return `${parseInt(day, 10)}/${parseInt(month, 10)}/${
+          parseInt(year, 10) + 543
+        }`;
       }
 
       // Function to search all student transactions by date
@@ -1108,7 +1153,7 @@
             const studentData = allAccounts[studentId];
             const history = studentData.history || [];
 
-            history.forEach(entry => {
+            history.forEach((entry) => {
               // Extract date from history entry, assuming format like "... (DD/MM/YYYY)"
               const dateMatch = entry.match(/\((\d{1,2}\/\d{1,2}\/\d{4})\)/);
               if (dateMatch && dateMatch[1] === searchDateFormatted) {
@@ -1122,7 +1167,7 @@
                 if (amountMatch) {
                   const type = amountMatch[1]; // "ฝาก" or "ถอน"
                   // Remove commas before parsing to float to ensure correct number conversion
-                  const amount = parseFloat(amountMatch[2].replace(/,/g, ''));
+                  const amount = parseFloat(amountMatch[2].replace(/,/g, ""));
 
                   if (type === "ฝาก") {
                     totalDeposit += amount;
@@ -1142,12 +1187,18 @@
 
           // Update the display for total sums after processing all accounts
           // Use toLocaleString for proper number formatting with 2 decimal places
-          totalDepositElement.textContent = totalDeposit.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          totalWithdrawalElement.textContent = totalWithdrawal.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
+          totalDepositElement.textContent = totalDeposit.toLocaleString(
+            "th-TH",
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+          );
+          totalWithdrawalElement.textContent = totalWithdrawal.toLocaleString(
+            "th-TH",
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+          );
 
           if (!foundResults) {
-            dateSearchResultList.innerHTML = '<p class="text-muted text-center">ไม่พบรายการสำหรับวันที่นี้</p>';
+            dateSearchResultList.innerHTML =
+              '<p class="text-muted text-center">ไม่พบรายการสำหรับวันที่นี้</p>';
           }
         } catch (error) {
           alert("เกิดข้อผิดพลาดในการค้นหาตามวันที่: " + error.message);
@@ -1168,7 +1219,11 @@
             const studentData = snap.val();
             $("transactionStudentName").textContent = studentData.name;
             $("transactionStudentId").textContent = studentId;
-            $("transactionStudentBalance").textContent = studentData.balance.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            $("transactionStudentBalance").textContent =
+              studentData.balance.toLocaleString("th-TH", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
           } else {
             alert("ไม่พบข้อมูลนักเรียน");
             window.backFromTransaction();
@@ -1210,10 +1265,12 @@
                 historyList.appendChild(li);
               });
             } else {
-              historyList.innerHTML = "<li class='text-muted'>ไม่มีประวัติการทำรายการ</li>";
+              historyList.innerHTML =
+                "<li class='text-muted'>ไม่มีประวัติการทำรายการ</li>";
             }
           } else {
-            historyList.innerHTML = "<li class='text-muted'>ไม่พบข้อมูลนักเรียน</li>";
+            historyList.innerHTML =
+              "<li class='text-muted'>ไม่พบข้อมูลนักเรียน</li>";
           }
         } catch (error) {
           alert("เกิดข้อผิดพลาดในการดึงประวัติ: " + error.message);
@@ -1272,17 +1329,25 @@
         const studentId = currentStudentToManage;
         const newHistoryText = $("historyEditTextArea").value;
         let newHistoryArray = [];
-        if (newHistoryText && newHistoryText.trim() !== "ไม่มีประวัติการทำรายการ") {
-          newHistoryArray = newHistoryText.split("\n").map(line => line.trim()).filter(line => line !== "");
+        if (
+          newHistoryText &&
+          newHistoryText.trim() !== "ไม่มีประวัติการทำรายการ"
+        ) {
+          newHistoryArray = newHistoryText
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line !== "");
         }
 
         try {
-          await update(ref(db, `accounts/${studentId}`), { history: newHistoryArray });
+          await update(ref(db, `accounts/${studentId}`), {
+            history: newHistoryArray,
+          });
           alert("บันทึกประวัติการแก้ไขเรียบร้อยแล้ว");
           logAdminAction("edit_student_history", {
             studentId: studentId,
             oldHistory: "โปรดดูจาก log เก่า", // Can't store full old history here easily without another fetch
-            newHistory: newHistoryArray.join(" | ")
+            newHistory: newHistoryArray.join(" | "),
           });
           window.backFromStudentHistoryEdit();
         } catch (error) {
@@ -1302,7 +1367,10 @@
       };
 
       window.editUserName = async (studentId, currentStudentName) => {
-        const newName = prompt(`กรุณากรอกชื่อ-นามสกุลใหม่สำหรับ ${currentStudentName} (ID: ${studentId}):`, currentStudentName);
+        const newName = prompt(
+          `กรุณากรอกชื่อ-นามสกุลใหม่สำหรับ ${currentStudentName} (ID: ${studentId}):`,
+          currentStudentName
+        );
         if (newName === null || newName.trim() === "") {
           alert("ชื่อ-นามสกุลไม่สามารถเป็นค่าว่างได้");
           return;
@@ -1310,11 +1378,13 @@
 
         try {
           await update(ref(db, `accounts/${studentId}`), { name: newName });
-          alert(`แก้ไขชื่อ-นามสกุลของ ${currentStudentName} (ID: ${studentId}) เป็น ${newName} เรียบร้อยแล้ว`);
+          alert(
+            `แก้ไขชื่อ-นามสกุลของ ${currentStudentName} (ID: ${studentId}) เป็น ${newName} เรียบร้อยแล้ว`
+          );
           logAdminAction("edit_user_name", {
             studentId: studentId,
             oldName: currentStudentName,
-            newName: newName
+            newName: newName,
           });
           if (currentId === "headadmin123") {
             window.updateHeadAdminView();
@@ -1328,9 +1398,16 @@
       };
 
       window.editUserId = async (oldStudentId) => {
-        const newStudentId = prompt(`กรุณากรอก ID นักเรียนใหม่สำหรับ ${oldStudentId}: (ไม่สามารถย้อนกลับได้)`, oldStudentId);
+        const newStudentId = prompt(
+          `กรุณากรอก ID นักเรียนใหม่สำหรับ ${oldStudentId}: (ไม่สามารถย้อนกลับได้)`,
+          oldStudentId
+        );
 
-        if (newStudentId === null || newStudentId.trim() === "" || newStudentId === oldStudentId) {
+        if (
+          newStudentId === null ||
+          newStudentId.trim() === "" ||
+          newStudentId === oldStudentId
+        ) {
           alert("ID ใหม่ไม่ถูกต้อง หรือซ้ำกับ ID เดิม");
           return;
         }
@@ -1344,7 +1421,9 @@
           }
           const newAdminSnap = await get(ref(db, `admins/${newStudentId}`));
           if (newAdminSnap.exists()) {
-            alert("ID นักเรียนใหม่นี้มีอยู่ในระบบแอดมินแล้ว กรุณาเลือก ID อื่น");
+            alert(
+              "ID นักเรียนใหม่นี้มีอยู่ในระบบแอดมินแล้ว กรุณาเลือก ID อื่น"
+            );
             return;
           }
         } catch (error) {
@@ -1353,7 +1432,11 @@
           return;
         }
 
-        if (!confirm(`คุณแน่ใจหรือไม่ที่ต้องการเปลี่ยน ID จาก ${oldStudentId} เป็น ${newStudentId} การกระทำนี้ไม่สามารถย้อนกลับได้!`)) {
+        if (
+          !confirm(
+            `คุณแน่ใจหรือไม่ที่ต้องการเปลี่ยน ID จาก ${oldStudentId} เป็น ${newStudentId} การกระทำนี้ไม่สามารถย้อนกลับได้!`
+          )
+        ) {
           return;
         }
 
@@ -1374,11 +1457,13 @@
           // 2. Delete old account
           await remove(oldAccountRef);
 
-          alert(`เปลี่ยน ID บัญชีจาก ${oldStudentId} เป็น ${newStudentId} เรียบร้อยแล้ว`);
+          alert(
+            `เปลี่ยน ID บัญชีจาก ${oldStudentId} เป็น ${newStudentId} เรียบร้อยแล้ว`
+          );
           logAdminAction("edit_user_id", {
             oldId: oldStudentId,
             newId: newStudentId,
-            studentName: accountData.name
+            studentName: accountData.name,
           });
 
           if (currentId === "headadmin123") {
@@ -1392,16 +1477,15 @@
         }
       };
 
-
       // Ensure the filterAdminLogs is called when the date or admin selection changes
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener("DOMContentLoaded", () => {
         const adminFilterSelect = $("adminFilterSelect");
         const adminDateFilter = $("adminDateFilter");
         if (adminFilterSelect) {
-          adminFilterSelect.addEventListener('change', window.filterAdminLogs);
+          adminFilterSelect.addEventListener("change", window.filterAdminLogs);
         }
         if (adminDateFilter) {
-          adminDateFilter.addEventListener('change', window.filterAdminLogs);
+          adminDateFilter.addEventListener("change", window.filterAdminLogs);
         }
       });
     </script>

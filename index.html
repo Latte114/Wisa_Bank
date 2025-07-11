@@ -377,19 +377,19 @@
 
         try {
           const adminSnap = await get(ref(db, `admins/${id}`));
-
+          
           // ตรวจสอบข้อมูลผู้ดูแลระบบจาก Firebase
           if (adminSnap.exists()) {
             const adminData = adminSnap.val();
-
+            
             // เปรียบเทียบรหัสผ่าน (ตอนนี้รหัสผ่านถูกเก็บใน Firebase แล้ว)
             if (password === adminData.password) {
               currentId = id;
               currentName = adminData.name || "Admin"; // ใช้ชื่อจาก Firebase หรือ "Admin" เป็นค่าเริ่มต้น
-
+              
               // กำหนดบทบาทจาก Firebase
               const adminRole = adminData.role || "admin";
-
+              
               // ตรวจสอบบทบาทเพื่ออัพเดตหน้าจอ
               if (adminRole === "headadmin") {
                 window.updateHeadAdminView();

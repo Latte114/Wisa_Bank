@@ -1,6 +1,6 @@
 /* --- Global Styles & Layout --- */
 body {
-  font-family: 'Kanit', sans-serif;
+  font-family: "Kanit", sans-serif;
   margin: 0;
   background-color: #121d2b;
   color: #e0e6ed;
@@ -60,7 +60,8 @@ body {
   align-items: center;
 }
 
-h1, h2 {
+h1,
+h2 {
   color: #a0c2e6;
   text-align: center;
   margin-bottom: 45px;
@@ -78,7 +79,10 @@ h1, h2 {
   cursor: pointer;
   font-size: 1.1em;
   font-weight: 600;
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.3s ease;
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
   margin: 10px;
   letter-spacing: 0.5px;
@@ -125,26 +129,26 @@ h1, h2 {
 }
 
 .button--warning {
-    background-color: #ffc107;
-    color: #333;
-    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+  background-color: #ffc107;
+  color: #333;
+  box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
 }
 
 .button--warning:hover {
-    background-color: #e0a800;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(255, 193, 7, 0.45);
+  background-color: #e0a800;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(255, 193, 7, 0.45);
 }
 
 .button--info {
-    background-color: #17a2b8;
-    box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
+  background-color: #17a2b8;
+  box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
 }
 
 .button--info:hover {
-    background-color: #138496;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(23, 162, 184, 0.45);
+  background-color: #138496;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(23, 162, 184, 0.45);
 }
 
 .button--purple {
@@ -158,7 +162,6 @@ h1, h2 {
   box-shadow: 0 6px 12px rgba(111, 66, 193, 0.45);
 }
 
-
 /* --- Input Fields --- */
 .input-field {
   width: calc(100% - 24px);
@@ -170,7 +173,9 @@ h1, h2 {
   border-radius: 6px;
   box-sizing: border-box;
   font-size: 1.1em;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .input-field:focus {
@@ -180,14 +185,20 @@ h1, h2 {
 }
 
 /* --- Lists (Account, History, Admin Log) --- */
-.account-list, .history-list, .date-search-results, .admin-log-list {
+.account-list,
+.history-list,
+.date-search-results,
+.admin-log-list {
   list-style: none;
   padding: 0;
   margin: 0;
   width: 100%;
 }
 
-.account-item, .history-item, .search-results__item, .admin-log-item {
+.account-item,
+.history-item,
+.search-results__item,
+.admin-log-item {
   background-color: #2b4059;
   border: 1px solid #4a678d;
   border-radius: 10px;
@@ -196,13 +207,18 @@ h1, h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.account-item:hover, .history-item:hover, .search-results__item:hover, .admin-log-item:hover {
-    background-color: #354e6e;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
+.account-item:hover,
+.history-item:hover,
+.search-results__item:hover,
+.admin-log-item:hover {
+  background-color: #354e6e;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
 }
 
 .account-name {
@@ -212,7 +228,8 @@ h1, h2 {
   font-size: 1.2em;
 }
 
-.account-id, .account-balance {
+.account-id,
+.account-balance {
   font-size: 1em;
   color: #b0c9e6;
   line-height: 1.6;
@@ -220,13 +237,13 @@ h1, h2 {
 
 .account-balance {
   font-weight: bold;
-  color: #4CAF50;
+  color: #4caf50;
   font-size: 1.2em;
 }
 
 /* --- Specific Sections (Login, Admin Pages) --- */
 #loginForm .button-group {
-    margin-top: 50px;
+  margin-top: 50px;
 }
 
 #loginPage {
@@ -260,26 +277,32 @@ h1, h2 {
 }
 
 #loginForm .button-group {
-    width: 90%;
-    max-width: 1150px; /* Adjusted to be wider */
-    margin-top: 50px;
+  width: 90%;
+  max-width: 1150px; /* Adjusted to be wider */
+  margin-top: 50px;
 }
 
 #loginForm .button-group .button {
-    width: 100%;
-    margin-bottom: 15px;
+  width: 100%;
+  margin-bottom: 15px;
 }
 
 /* Headings in specific pages */
-#adminPage h2, #accountCreationPage h2, #transactionPage h2,
-#editAccountPage h2, #deleteAccountPage h2, #adminManagementPage h2,
-#createAdminPage h2, #editAdminPasswordPage h2, #deleteAdminPage h2,
+#adminPage h2,
+#accountCreationPage h2,
+#transactionPage h2,
+#editAccountPage h2,
+#deleteAccountPage h2,
+#adminManagementPage h2,
+#createAdminPage h2,
+#editAdminPasswordPage h2,
+#deleteAdminPage h2,
 #adminLogPage h2 {
-    text-align: left;
-    margin-bottom: 45px;
-    font-weight: 600;
-    color: #a0c2e6;
-    font-size: 2em;
+  text-align: left;
+  margin-bottom: 45px;
+  font-weight: 600;
+  color: #a0c2e6;
+  font-size: 2em;
 }
 
 /* Filter Controls */
@@ -296,14 +319,15 @@ h1, h2 {
 }
 
 .filter-label {
-    display: block;
-    margin-bottom: 12px;
-    font-weight: 500;
-    color: #e0e6ed;
-    font-size: 1.1em;
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #e0e6ed;
+  font-size: 1.1em;
 }
 
-.filter-input, .filter-select {
+.filter-input,
+.filter-select {
   width: calc(100% - 24px);
   padding: 15px;
   background-color: #354e6e;
@@ -316,20 +340,21 @@ h1, h2 {
 }
 
 .wisa-version-box {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background-color: transparent;
-    color: #809bb8;
-    font-size: 0.9em;
-    padding: 0;
-    border-radius: 0;
-    box-shadow: none;
-    letter-spacing: 0.3px;
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background-color: transparent;
+  color: #809bb8;
+  font-size: 0.9em;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  letter-spacing: 0.3px;
 }
 
-.form-group, .button-group {
-    margin-top: 25px;
+.form-group,
+.button-group {
+  margin-top: 25px;
 }
 
 /* --- Message Styling --- */
@@ -387,7 +412,7 @@ h1, h2 {
 }
 
 .user-card__balance {
-  color: #4CAF50;
+  color: #4caf50;
   font-size: 1.2em; /* Adjusted */
   display: block;
   margin-top: 8px;
@@ -431,76 +456,92 @@ h1, h2 {
 
 /* Admin List in Head Admin View */
 .admin-list-container {
-    width: 100%;
-    margin-top: 30px;
+  width: 100%;
+  margin-top: 30px;
 }
 
 .admin-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    width: 100%;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
 }
 
 .admin-list__item {
-    background-color: #2b4059;
-    border: 1px solid #4a678d;
-    border-radius: 10px;
-    padding: 18px 20px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  background-color: #2b4059;
+  border: 1px solid #4a678d;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .admin-list__item-info {
-    font-weight: 600;
-    color: #e0e6ed;
-    font-size: 1.1em;
+  font-weight: 600;
+  color: #e0e6ed;
+  font-size: 1.1em;
 }
 
 .admin-list__actions .button {
-    margin-left: 12px;
-    padding: 12px 18px;
-    font-size: 1em;
+  margin-left: 12px;
+  padding: 12px 18px;
+  font-size: 1em;
 }
 
 /* Animations (unchanged) */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideDown {
-  from { transform: translateY(-20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Utility Classes (adjusted to match new spacing) */
 .flex-column {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .align-center {
-    align-items: center;
+  align-items: center;
 }
 
 .margin-bottom-sm {
-    margin-bottom: 15px;
+  margin-bottom: 15px;
 }
 
 .margin-bottom-md {
-    margin-bottom: 30px;
+  margin-bottom: 30px;
 }
 
 .margin-top-sm {
-    margin-top: 15px;
+  margin-top: 15px;
 }
 
 .text-muted {
@@ -547,7 +588,8 @@ h1, h2 {
     max-width: none; /* Allow to fill width on smaller screens */
   }
 
-  h1, h2 {
+  h1,
+  h2 {
     font-size: 1.8em;
     margin-bottom: 30px;
   }
@@ -568,13 +610,18 @@ h1, h2 {
     max-width: none;
   }
 
-  .account-item, .history-item, .search-results__item, .admin-log-item {
+  .account-item,
+  .history-item,
+  .search-results__item,
+  .admin-log-item {
     padding: 18px 20px;
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .account-name, .account-id, .account-balance {
+  .account-name,
+  .account-id,
+  .account-balance {
     font-size: 1em;
     margin-bottom: 6px;
   }
@@ -619,7 +666,8 @@ h1, h2 {
     max-width: none;
   }
 
-  .filter-input, .filter-select {
+  .filter-input,
+  .filter-select {
     font-size: 1em;
     padding: 12px;
   }
@@ -672,11 +720,82 @@ h1, h2 {
     padding: 20px;
   }
 
-  .filter-input, .filter-select {
+  .filter-input,
+  .filter-select {
     width: calc(100% - 20px);
   }
 
   .user-card__menu .button {
     width: calc(100% - 12px);
   }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal {
+  background: #fff;
+  width: 380px;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  animation: pop 0.2s ease;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal h2 {
+  margin-top: 0;
+  color: #c62828;
+}
+
+.warning {
+  background: #fff3f3;
+  border-left: 4px solid #e53935;
+  padding: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.modal input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn.danger {
+  background: #e53935;
+  color: white;
 }

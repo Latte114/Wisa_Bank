@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
   <head>
     <meta charset="UTF-8" />
@@ -164,6 +164,33 @@
       Wisa Bank Version <span id="wisa-version"></span>
     </div>
 
+    <!-- Confirm Delete Modal -->
+    <div id="deleteModal" class="modal-overlay">
+      <div class="modal">
+        <h2>⚠️ ล้างข้อมูลธนาคาร</h2>
+
+        <p class="warning">
+          การกระทำนี้จะ <b>ลบข้อมูลทั้งหมดถาวร</b><br />
+          ไม่สามารถกู้คืนได้
+        </p>
+
+        <label>รหัสผ่าน Head Admin</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          placeholder="กรอกรหัสผ่าน"
+        />
+
+        <label>พิมพ์คำว่า <b>DELETE</b> เพื่อยืนยัน</label>
+        <input type="text" id="confirmText" placeholder="พิมพ์ DELETE" />
+
+        <div class="modal-actions">
+          <button id="cancelDelete" class="btn">ยกเลิก</button>
+          <button id="confirmDelete" class="btn danger">ลบข้อมูล</button>
+        </div>
+      </div>
+    </div>
+
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
       import {
@@ -188,6 +215,11 @@
         messagingSenderId: "239494442017",
         appId: "1:239494442017:web:7a9b4a0c3d2f8f8b392acd",
       };
+      import {
+        getAuth,
+        EmailAuthProvider,
+        reauthenticateWithCredential,
+      } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
       const app = initializeApp(firebaseConfig);
       const db = getDatabase(app);
@@ -198,9 +230,69 @@
       let currentStudentToManage = null;
       let currentTransactionStudentId = null; // Added for transaction page
 
-      const WISA_VERSION = "v2.0.1";
+      const WISA_VERSION = "v2.1.2";
       document.getElementById("wisa-version").textContent = WISA_VERSION;
       window.WISA_VERSION = WISA_VERSION;
+
+      const modal = document.getElementById("deleteModal");
+      const cancelBtn = document.getElementById("cancelDelete");
+
+      window.clearBankDatabase = () => {
+        modal.style.display = "flex";
+      };
+
+      cancelBtn.onclick = () => {
+        modal.style.display = "none";
+      };
+
+      document.getElementById("confirmDelete").onclick = async () => {
+        const password = document.getElementById("confirmPassword").value;
+        const confirmText = document.getElementById("confirmText").value;
+
+        if (!password) {
+          alert("กรุณากรอกรหัสผ่าน");
+          return;
+        }
+
+        if (confirmText !== "DELETE") {
+          alert('ต้องพิมพ์คำว่า "DELETE" ให้ถูกต้อง');
+          return;
+        }
+
+        try {
+          // ตรวจรหัสผ่าน Head Admin
+          const adminSnap = await get(ref(db, `admins/${currentId}`));
+          if (!adminSnap.exists()) {
+            alert("ไม่พบข้อมูล Head Admin");
+            return;
+          }
+
+          const adminData = adminSnap.val();
+          if (password !== adminData.password) {
+            alert("❌ รหัสผ่านไม่ถูกต้อง");
+            return;
+          }
+
+          // ลบข้อมูลธนาคาร
+          await remove(ref(db, "accounts"));
+          await remove(ref(db, "transactions"));
+          await remove(ref(db, "history"));
+          await remove(ref(db, "admin_logs"));
+
+          alert("✅ ล้างข้อมูลธนาคารเรียบร้อยแล้ว");
+
+          logAdminAction(
+            "clear_database",
+            "ล้างข้อมูลธนาคารทั้งหมด (DELETE + password confirm)",
+          );
+
+          modal.style.display = "none";
+          window.updateHeadAdminView();
+        } catch (err) {
+          console.error(err);
+          alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+        }
+      };
 
       window.toggleDropdown = (id) => {
         document.getElementById(id).classList.toggle("show");
@@ -263,7 +355,7 @@
           XLSX.utils.book_append_sheet(
             workbook,
             worksheet,
-            "ข้อมูลบัญชีทั้งหมด"
+            "ข้อมูลบัญชีทั้งหมด",
           );
           const safeFileName = `all_accounts_${new Date()
             .toLocaleDateString("th-TH")
@@ -272,7 +364,7 @@
           alert("ส่งออกข้อมูลบัญชีทั้งหมดเรียบร้อยแล้ว");
           logAdminAction(
             "export_all_accounts",
-            "ส่งออกข้อมูลบัญชีทั้งหมดไปยัง Excel"
+            "ส่งออกข้อมูลบัญชีทั้งหมดไปยัง Excel",
           );
         } catch (error) {
           alert("เกิดข้อผิดพลาดในการส่งออกข้อมูลบัญชี: " + error.message);
@@ -325,7 +417,7 @@
             id === "headadmin123"
           ) {
             alert(
-              "รหัสนี้ถูกใช้เป็น ID แอดมินแล้ว กรุณาเลือก ID อื่นสำหรับบัญชี"
+              "รหัสนี้ถูกใช้เป็น ID แอดมินแล้ว กรุณาเลือก ID อื่นสำหรับบัญชี",
             );
             return;
           }
@@ -377,19 +469,19 @@
 
         try {
           const adminSnap = await get(ref(db, `admins/${id}`));
-          
+
           // ตรวจสอบข้อมูลผู้ดูแลระบบจาก Firebase
           if (adminSnap.exists()) {
             const adminData = adminSnap.val();
-            
+
             // เปรียบเทียบรหัสผ่าน (ตอนนี้รหัสผ่านถูกเก็บใน Firebase แล้ว)
             if (password === adminData.password) {
               currentId = id;
               currentName = adminData.name || "Admin"; // ใช้ชื่อจาก Firebase หรือ "Admin" เป็นค่าเริ่มต้น
-              
+
               // กำหนดบทบาทจาก Firebase
               const adminRole = adminData.role || "admin";
-              
+
               // ตรวจสอบบทบาทเพื่ออัพเดตหน้าจอ
               if (adminRole === "headadmin") {
                 window.updateHeadAdminView();
@@ -431,12 +523,12 @@
           data.balance += amt;
           const adminWhoDeposited = currentName || currentId;
           const logEntry = `ฝาก ${amt} บาท (โดย ${adminWhoDeposited}) (${new Date().toLocaleDateString(
-            "th-TH"
+            "th-TH",
           )})`;
           data.history.unshift(logEntry);
           await update(refPath, data);
           alert(
-            `ฝากเงิน ${amt} บาท ให้ ${data.name} (${studentId}) เรียบร้อยแล้ว`
+            `ฝากเงิน ${amt} บาท ให้ ${data.name} (${studentId}) เรียบร้อยแล้ว`,
           );
           logAdminAction("deposit", {
             studentId: studentId,
@@ -445,18 +537,16 @@
           });
           // Instead of backFromTransaction directly, update the balance on the transaction page
           $("transactionStudentBalance").textContent = data.balance;
-          $(
-            "transactionMessage"
-          ).textContent = `ฝากเงิน ${amt} บาท สำเร็จ! ยอดคงเหลือ: ${data.balance} บาท`;
+          $("transactionMessage").textContent =
+            `ฝากเงิน ${amt} บาท สำเร็จ! ยอดคงเหลือ: ${data.balance} บาท`;
           $("transactionMessage").className = "message success-message";
           $("transactionMessage").style.display = "block";
           $("transactionAmount").value = ""; // Clear amount field
         } catch (error) {
           alert("เกิดข้อผิดพลาดในการฝากเงิน: " + error.message);
           console.error("Error depositing:", error);
-          $(
-            "transactionMessage"
-          ).textContent = `เกิดข้อผิดพลาดในการฝากเงิน: ${error.message}`;
+          $("transactionMessage").textContent =
+            `เกิดข้อผิดพลาดในการฝากเงิน: ${error.message}`;
           $("transactionMessage").className = "message error-message";
           $("transactionMessage").style.display = "block";
         }
@@ -465,7 +555,7 @@
       // Add these two functions to make them globally accessible and call your existing logic
       window.performDeposit = async () => {
         const amount = parseFloat(
-          document.getElementById("transactionAmount").value
+          document.getElementById("transactionAmount").value,
         );
         if (isNaN(amount) || amount <= 0) {
           // You can replace this alert with your displayMessage function if you prefer
@@ -478,7 +568,7 @@
 
       window.performWithdraw = async () => {
         const amount = parseFloat(
-          document.getElementById("transactionAmount").value
+          document.getElementById("transactionAmount").value,
         );
         if (isNaN(amount) || amount <= 0) {
           // You can replace this alert with your displayMessage function if you prefer
@@ -507,11 +597,10 @@
           data.history = !Array.isArray(data.history) ? [] : data.history;
           if (amt > data.balance) {
             alert(
-              `ยอดเงิน ${data.name} (${studentId}) ไม่พอ (${data.balance} บาท)`
+              `ยอดเงิน ${data.name} (${studentId}) ไม่พอ (${data.balance} บาท)`,
             );
-            $(
-              "transactionMessage"
-            ).textContent = `ยอดเงิน ${data.name} (${studentId}) ไม่พอ (${data.balance} บาท)`;
+            $("transactionMessage").textContent =
+              `ยอดเงิน ${data.name} (${studentId}) ไม่พอ (${data.balance} บาท)`;
             $("transactionMessage").className = "message error-message";
             $("transactionMessage").style.display = "block";
             return;
@@ -519,12 +608,12 @@
           data.balance -= amt;
           const adminWhoWithdrew = currentName || currentId;
           const logEntry = `ถอน ${amt} บาท (โดย ${adminWhoWithdrew}) (${new Date().toLocaleDateString(
-            "th-TH"
+            "th-TH",
           )})`;
           data.history.unshift(logEntry);
           await update(refPath, data);
           alert(
-            `ถอนเงิน ${amt} บาท จาก ${data.name} (${studentId}) เรียบร้อยแล้ว`
+            `ถอนเงิน ${amt} บาท จาก ${data.name} (${studentId}) เรียบร้อยแล้ว`,
           );
           logAdminAction("withdraw", {
             studentId: studentId,
@@ -533,17 +622,15 @@
           });
           // Instead of backFromTransaction directly, update the balance on the transaction page
           $("transactionStudentBalance").textContent = data.balance;
-          $(
-            "transactionMessage"
-          ).textContent = `ถอนเงิน ${amt} บาท สำเร็จ! ยอดคงเหลือ: ${data.balance} บาท`;
+          $("transactionMessage").textContent =
+            `ถอนเงิน ${amt} บาท สำเร็จ! ยอดคงเหลือ: ${data.balance} บาท`;
           $("transactionMessage").className = "message success-message";
           $("transactionAmount").value = ""; // Clear amount field
         } catch (error) {
           alert("เกิดข้อผิดพลาดในการถอนเงิน: " + error.message);
           console.error("Error withdrawing:", error);
-          $(
-            "transactionMessage"
-          ).textContent = `เกิดข้อผิดพลาดในการถอนเงิน: ${error.message}`;
+          $("transactionMessage").textContent =
+            `เกิดข้อผิดพลาดในการถอนเงิน: ${error.message}`;
           $("transactionMessage").className = "message error-message";
           $("transactionMessage").style.display = "block";
         }
@@ -559,7 +646,7 @@
       window.deleteAccount = async (idToDelete) => {
         if (
           confirm(
-            "คุณต้องการลบบัญชีนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้!"
+            "คุณต้องการลบบัญชีนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้!",
           )
         ) {
           try {
@@ -572,7 +659,7 @@
             alert("บัญชีถูกลบแล้ว");
             logAdminAction(
               "delete_account",
-              `ลบบัญชี: ${deletedAccountName} (ID: ${idToDelete})`
+              `ลบบัญชี: ${deletedAccountName} (ID: ${idToDelete})`,
             );
 
             if (currentId === "headadmin123") {
@@ -650,7 +737,7 @@
           });
 
           const existingStudentCards = studentManageSection.querySelectorAll(
-            ".user-card, .total-balance-summary"
+            ".user-card, .total-balance-summary",
           );
           existingStudentCards.forEach((card) => card.remove());
 
@@ -746,6 +833,12 @@
         exportBtn.onclick = window.exportAllAccountsToExcel;
         container.appendChild(exportBtn);
 
+        const clearDbBtn = document.createElement("button");
+        clearDbBtn.textContent = "🗑️ ล้างข้อมูลธนาคารทั้งหมด";
+        clearDbBtn.className = "button button--danger margin-top-md";
+        clearDbBtn.onclick = window.clearBankDatabase;
+        container.appendChild(clearDbBtn);
+
         const logoutBtn = document.createElement("button");
         logoutBtn.textContent = "ออกจากระบบ";
         logoutBtn.className = "button button--danger";
@@ -804,7 +897,7 @@
 
       window.addAdmin = async () => {
         const newAdminId = prompt(
-          "กรุณากรอก ID สำหรับแอดมินใหม่ (ไม่ควรซ้ำกับรหัสบัญชีหรือแอดมินที่มีอยู่):"
+          "กรุณากรอก ID สำหรับแอดมินใหม่ (ไม่ควรซ้ำกับรหัสบัญชีหรือแอดมินที่มีอยู่):",
         );
         if (!newAdminId || newAdminId.trim() === "") {
           alert("ID แอดมินต้องไม่เป็นค่าว่าง");
@@ -833,7 +926,7 @@
             const studentSnap = await get(ref(db, `accounts/${newAdminId}`));
             if (studentSnap.exists()) {
               alert(
-                "ID นี้ถูกใช้เป็นรหัสบัญชีแล้ว กรุณาเลือก ID อื่นสำหรับแอดมิน"
+                "ID นี้ถูกใช้เป็นรหัสบัญชีแล้ว กรุณาเลือก ID อื่นสำหรับแอดมิน",
               );
               return;
             }
@@ -841,7 +934,7 @@
             alert("เพิ่มแอดมินใหม่เรียบร้อยแล้ว");
             logAdminAction(
               "add_admin",
-              `เพิ่มแอดมินใหม่: ${newAdminName} (ID: ${newAdminId})`
+              `เพิ่มแอดมินใหม่: ${newAdminName} (ID: ${newAdminId})`,
             );
             displayAdminList();
           }
@@ -853,7 +946,7 @@
 
       window.editAdminPassword = async (adminId, adminName) => {
         const newPassword = prompt(
-          `กรุณากรอกรหัสผ่านใหม่สำหรับแอดมิน ${adminName} (ID: ${adminId}):`
+          `กรุณากรอกรหัสผ่านใหม่สำหรับแอดมิน ${adminName} (ID: ${adminId}):`,
         );
         if (newPassword === null) {
           return;
@@ -865,11 +958,11 @@
         try {
           await update(ref(db, `admins/${adminId}`), { password: newPassword });
           alert(
-            `แก้ไขรหัสผ่านสำหรับแอดมิน ${adminName} (ID: ${adminId}) เรียบร้อยแล้ว`
+            `แก้ไขรหัสผ่านสำหรับแอดมิน ${adminName} (ID: ${adminId}) เรียบร้อยแล้ว`,
           );
           logAdminAction(
             "edit_admin_password",
-            `แก้ไขรหัสผ่านแอดมิน: ${adminName} (ID: ${adminId})`
+            `แก้ไขรหัสผ่านแอดมิน: ${adminName} (ID: ${adminId})`,
           );
         } catch (error) {
           alert("เกิดข้อผิดพลาดในการแก้ไขรหัสผ่านแอดมิน: " + error.message);
@@ -880,7 +973,7 @@
       window.deleteAdminAccount = async (adminIdToDelete) => {
         if (
           confirm(
-            `คุณต้องการลบบัญชีแอดมิน ${adminIdToDelete} หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้!`
+            `คุณต้องการลบบัญชีแอดมิน ${adminIdToDelete} หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้!`,
           )
         ) {
           if (
@@ -900,7 +993,7 @@
             alert("บัญชีแอดมินถูกลบแล้ว");
             logAdminAction(
               "delete_admin",
-              `ลบบัญชีแอดมิน: ${deletedAdminName} (ID: ${adminIdToDelete})`
+              `ลบบัญชีแอดมิน: ${deletedAdminName} (ID: ${adminIdToDelete})`,
             );
             displayAdminList();
           } catch (error) {
@@ -1039,6 +1132,8 @@
 
         onValue(allAccountsRef, (snapshot) => {
           const data = snapshot.val() || {};
+          let totalBalance = 0;
+
           const sortedEntries = Object.entries(data).sort((a, b) => {
             const idA = String(a[0]);
             const idB = String(b[0]);
@@ -1050,6 +1145,7 @@
           existingStudentCards.forEach((card) => card.remove());
 
           for (const [id, user] of sortedEntries) {
+            totalBalance += typeof user.balance === "number" ? user.balance : 0;
             const userContainer = document.createElement("div");
             userContainer.className = "user-card";
 
@@ -1103,6 +1199,18 @@
             userContainer.appendChild(menu);
             studentManageSection.appendChild(userContainer);
           }
+          const oldSummary = studentManageSection.querySelector(
+            ".total-balance-summary",
+          );
+          if (oldSummary) oldSummary.remove();
+
+          const totalDiv = document.createElement("div");
+          totalDiv.innerHTML = `
+  <h3 class="total-balance-summary">
+    💰 ยอดรวมทั้งหมดในระบบ: ${totalBalance.toLocaleString()} บาท
+  </h3>
+`;
+          studentManageSection.appendChild(totalDiv);
         });
 
         const logoutBtn = document.createElement("button");
@@ -1189,11 +1297,11 @@
           // Use toLocaleString for proper number formatting with 2 decimal places
           totalDepositElement.textContent = totalDeposit.toLocaleString(
             "th-TH",
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 },
           );
           totalWithdrawalElement.textContent = totalWithdrawal.toLocaleString(
             "th-TH",
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 },
           );
 
           if (!foundResults) {
@@ -1369,7 +1477,7 @@
       window.editUserName = async (studentId, currentStudentName) => {
         const newName = prompt(
           `กรุณากรอกชื่อ-นามสกุลใหม่สำหรับ ${currentStudentName} (ID: ${studentId}):`,
-          currentStudentName
+          currentStudentName,
         );
         if (newName === null || newName.trim() === "") {
           alert("ชื่อ-นามสกุลไม่สามารถเป็นค่าว่างได้");
@@ -1379,7 +1487,7 @@
         try {
           await update(ref(db, `accounts/${studentId}`), { name: newName });
           alert(
-            `แก้ไขชื่อ-นามสกุลของ ${currentStudentName} (ID: ${studentId}) เป็น ${newName} เรียบร้อยแล้ว`
+            `แก้ไขชื่อ-นามสกุลของ ${currentStudentName} (ID: ${studentId}) เป็น ${newName} เรียบร้อยแล้ว`,
           );
           logAdminAction("edit_user_name", {
             studentId: studentId,
@@ -1400,7 +1508,7 @@
       window.editUserId = async (oldStudentId) => {
         const newStudentId = prompt(
           `กรุณากรอก ID นักเรียนใหม่สำหรับ ${oldStudentId}: (ไม่สามารถย้อนกลับได้)`,
-          oldStudentId
+          oldStudentId,
         );
 
         if (
@@ -1422,7 +1530,7 @@
           const newAdminSnap = await get(ref(db, `admins/${newStudentId}`));
           if (newAdminSnap.exists()) {
             alert(
-              "ID นักเรียนใหม่นี้มีอยู่ในระบบแอดมินแล้ว กรุณาเลือก ID อื่น"
+              "ID นักเรียนใหม่นี้มีอยู่ในระบบแอดมินแล้ว กรุณาเลือก ID อื่น",
             );
             return;
           }
@@ -1434,7 +1542,7 @@
 
         if (
           !confirm(
-            `คุณแน่ใจหรือไม่ที่ต้องการเปลี่ยน ID จาก ${oldStudentId} เป็น ${newStudentId} การกระทำนี้ไม่สามารถย้อนกลับได้!`
+            `คุณแน่ใจหรือไม่ที่ต้องการเปลี่ยน ID จาก ${oldStudentId} เป็น ${newStudentId} การกระทำนี้ไม่สามารถย้อนกลับได้!`,
           )
         ) {
           return;
@@ -1458,7 +1566,7 @@
           await remove(oldAccountRef);
 
           alert(
-            `เปลี่ยน ID บัญชีจาก ${oldStudentId} เป็น ${newStudentId} เรียบร้อยแล้ว`
+            `เปลี่ยน ID บัญชีจาก ${oldStudentId} เป็น ${newStudentId} เรียบร้อยแล้ว`,
           );
           logAdminAction("edit_user_id", {
             oldId: oldStudentId,
@@ -1488,6 +1596,50 @@
           adminDateFilter.addEventListener("change", window.filterAdminLogs);
         }
       });
+      window.clearBankDatabase = async () => {
+        const password = prompt(
+          "⚠️ กรุณากรอกรหัสผ่าน Head Admin เพื่อยืนยันการล้างข้อมูล",
+        );
+        if (!password) return;
+
+        try {
+          // ตรวจรหัสผ่านจาก Firebase ตามระบบของคุณ
+          const adminSnap = await get(ref(db, `admins/${currentId}`));
+          if (!adminSnap.exists()) {
+            alert("ไม่พบข้อมูล Head Admin");
+            return;
+          }
+
+          const adminData = adminSnap.val();
+          if (password !== adminData.password) {
+            alert("❌ รหัสผ่านไม่ถูกต้อง");
+            return;
+          }
+
+          const confirmDelete = confirm(
+            "⚠️ ข้อมูลบัญชีและธุรกรรมทั้งหมดจะถูกลบถาวร!\nไม่สามารถกู้คืนได้ แน่ใจหรือไม่?",
+          );
+          if (!confirmDelete) return;
+
+          // 💣 ลบเฉพาะ node (ปลอดภัย)
+          await remove(ref(db, "accounts"));
+          await remove(ref(db, "transactions"));
+          await remove(ref(db, "history"));
+          await remove(ref(db, "admin_logs"));
+
+          alert("✅ ล้างข้อมูลธนาคารเรียบร้อยแล้ว");
+
+          logAdminAction(
+            "clear_database",
+            "ล้างข้อมูลธนาคารทั้งหมด (accounts, transactions, history)",
+          );
+
+          window.updateHeadAdminView();
+        } catch (error) {
+          console.error(error);
+          alert("เกิดข้อผิดพลาดในการล้างข้อมูล");
+        }
+      };
     </script>
   </body>
 </html>

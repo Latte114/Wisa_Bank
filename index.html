@@ -164,33 +164,6 @@
       Wisa Bank Version <span id="wisa-version"></span>
     </div>
 
-    <!-- Confirm Delete Modal -->
-    <div id="deleteModal" class="modal-overlay">
-      <div class="modal">
-        <h2>⚠️ ล้างข้อมูลธนาคาร</h2>
-
-        <p class="warning">
-          การกระทำนี้จะ <b>ลบข้อมูลทั้งหมดถาวร</b><br />
-          ไม่สามารถกู้คืนได้
-        </p>
-
-        <label>รหัสผ่าน Head Admin</label>
-        <input
-          type="password"
-          id="confirmPassword"
-          placeholder="กรอกรหัสผ่าน"
-        />
-
-        <label>พิมพ์คำว่า <b>DELETE</b> เพื่อยืนยัน</label>
-        <input type="text" id="confirmText" placeholder="พิมพ์ DELETE" />
-
-        <div class="modal-actions">
-          <button id="cancelDelete" class="btn">ยกเลิก</button>
-          <button id="confirmDelete" class="btn danger">ลบข้อมูล</button>
-        </div>
-      </div>
-    </div>
-
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
       import {
@@ -233,66 +206,6 @@
       const WISA_VERSION = "v2.1.2";
       document.getElementById("wisa-version").textContent = WISA_VERSION;
       window.WISA_VERSION = WISA_VERSION;
-
-      const modal = document.getElementById("deleteModal");
-      const cancelBtn = document.getElementById("cancelDelete");
-
-      window.clearBankDatabase = () => {
-        modal.style.display = "flex";
-      };
-
-      cancelBtn.onclick = () => {
-        modal.style.display = "none";
-      };
-
-      document.getElementById("confirmDelete").onclick = async () => {
-        const password = document.getElementById("confirmPassword").value;
-        const confirmText = document.getElementById("confirmText").value;
-
-        if (!password) {
-          alert("กรุณากรอกรหัสผ่าน");
-          return;
-        }
-
-        if (confirmText !== "DELETE") {
-          alert('ต้องพิมพ์คำว่า "DELETE" ให้ถูกต้อง');
-          return;
-        }
-
-        try {
-          // ตรวจรหัสผ่าน Head Admin
-          const adminSnap = await get(ref(db, `admins/${currentId}`));
-          if (!adminSnap.exists()) {
-            alert("ไม่พบข้อมูล Head Admin");
-            return;
-          }
-
-          const adminData = adminSnap.val();
-          if (password !== adminData.password) {
-            alert("❌ รหัสผ่านไม่ถูกต้อง");
-            return;
-          }
-
-          // ลบข้อมูลธนาคาร
-          await remove(ref(db, "accounts"));
-          await remove(ref(db, "transactions"));
-          await remove(ref(db, "history"));
-          await remove(ref(db, "admin_logs"));
-
-          alert("✅ ล้างข้อมูลธนาคารเรียบร้อยแล้ว");
-
-          logAdminAction(
-            "clear_database",
-            "ล้างข้อมูลธนาคารทั้งหมด (DELETE + password confirm)",
-          );
-
-          modal.style.display = "none";
-          window.updateHeadAdminView();
-        } catch (err) {
-          console.error(err);
-          alert("เกิดข้อผิดพลาดในการลบข้อมูล");
-        }
-      };
 
       window.toggleDropdown = (id) => {
         document.getElementById(id).classList.toggle("show");
@@ -836,8 +749,78 @@
         const clearDbBtn = document.createElement("button");
         clearDbBtn.textContent = "🗑️ ล้างข้อมูลธนาคารทั้งหมด";
         clearDbBtn.className = "button button--danger margin-top-md";
-        clearDbBtn.onclick = window.clearBankDatabase;
         container.appendChild(clearDbBtn);
+
+        // ===== Modal =====
+        const modal = document.createElement("div");
+        modal.className = "modal-overlay";
+        modal.style.display = "none";
+        modal.innerHTML = `
+  <div class="modal">
+    <h2>⚠️ ล้างข้อมูลธนาคาร</h2>
+    <p class="warning">
+      การกระทำนี้จะลบข้อมูลทั้งหมดถาวร<br>
+      ไม่สามารถกู้คืนได้
+    </p>
+
+    <label>รหัสผ่าน Head Admin</label>
+    <input type="password" id="deletePassword">
+
+    <label>พิมพ์คำว่า <b>DELETE</b> เพื่อยืนยัน</label>
+    <input type="text" id="deleteConfirmText">
+
+    <div class="modal-actions">
+      <button id="cancelDelete" class="button">ยกเลิก</button>
+      <button id="confirmDelete" class="button button--danger">
+        ลบข้อมูล
+      </button>
+    </div>
+  </div>
+`;
+        container.appendChild(modal);
+
+        clearDbBtn.onclick = () => {
+          modal.style.display = "flex";
+        };
+
+        modal.querySelector("#cancelDelete").onclick = () => {
+          modal.style.display = "none";
+        };
+
+        modal.querySelector("#confirmDelete").onclick = async () => {
+          const password = modal.querySelector("#deletePassword").value;
+          const confirmText = modal.querySelector("#deleteConfirmText").value;
+
+          if (!password) {
+            alert("กรุณากรอกรหัสผ่าน");
+            return;
+          }
+
+          if (confirmText !== "DELETE") {
+            alert('ต้องพิมพ์คำว่า "DELETE" ให้ถูกต้อง');
+            return;
+          }
+
+          const adminSnap = await get(ref(db, `admins/${currentId}`));
+          if (!adminSnap.exists()) {
+            alert("ไม่พบข้อมูล Head Admin");
+            return;
+          }
+
+          if (password !== adminSnap.val().password) {
+            alert("❌ รหัสผ่านไม่ถูกต้อง");
+            return;
+          }
+
+          await remove(ref(db, "accounts"));
+          await remove(ref(db, "transactions"));
+          await remove(ref(db, "history"));
+          await remove(ref(db, "admin_logs"));
+
+          alert("✅ ล้างข้อมูลธนาคารเรียบร้อยแล้ว");
+          modal.style.display = "none";
+          window.updateHeadAdminView();
+        };
 
         const logoutBtn = document.createElement("button");
         logoutBtn.textContent = "ออกจากระบบ";
@@ -1596,50 +1579,6 @@
           adminDateFilter.addEventListener("change", window.filterAdminLogs);
         }
       });
-      window.clearBankDatabase = async () => {
-        const password = prompt(
-          "⚠️ กรุณากรอกรหัสผ่าน Head Admin เพื่อยืนยันการล้างข้อมูล",
-        );
-        if (!password) return;
-
-        try {
-          // ตรวจรหัสผ่านจาก Firebase ตามระบบของคุณ
-          const adminSnap = await get(ref(db, `admins/${currentId}`));
-          if (!adminSnap.exists()) {
-            alert("ไม่พบข้อมูล Head Admin");
-            return;
-          }
-
-          const adminData = adminSnap.val();
-          if (password !== adminData.password) {
-            alert("❌ รหัสผ่านไม่ถูกต้อง");
-            return;
-          }
-
-          const confirmDelete = confirm(
-            "⚠️ ข้อมูลบัญชีและธุรกรรมทั้งหมดจะถูกลบถาวร!\nไม่สามารถกู้คืนได้ แน่ใจหรือไม่?",
-          );
-          if (!confirmDelete) return;
-
-          // 💣 ลบเฉพาะ node (ปลอดภัย)
-          await remove(ref(db, "accounts"));
-          await remove(ref(db, "transactions"));
-          await remove(ref(db, "history"));
-          await remove(ref(db, "admin_logs"));
-
-          alert("✅ ล้างข้อมูลธนาคารเรียบร้อยแล้ว");
-
-          logAdminAction(
-            "clear_database",
-            "ล้างข้อมูลธนาคารทั้งหมด (accounts, transactions, history)",
-          );
-
-          window.updateHeadAdminView();
-        } catch (error) {
-          console.error(error);
-          alert("เกิดข้อผิดพลาดในการล้างข้อมูล");
-        }
-      };
     </script>
   </body>
 </html>

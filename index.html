@@ -1,1610 +1,1189 @@
 <!doctype html>
 <html lang="th">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wisa Bank</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Kanit&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" href="logo.png" type="image/png" sizes="32x32" />
-    <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="dropdown.css" />
-  </head>
 
-  <body>
-    <div id="schoolLogo" class="school-logo">
-      <img src="logo.png" alt="โลโก้โรงเรียนวิศานุสรณ์" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wisa Bank - ระบบจัดการบัญชี</title>
+  <link rel="icon" href="logo.png" type="image/png" sizes="32x32" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <!-- Aurora Mesh Background -->
+  <div class="aurora-mesh">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <div id="toast-container"></div>
+  <div id="global-loader" class="loader-container">
+    <div class="spinner"></div>
+    <div id="loader-text">กำลังโหลด...</div>
+  </div>
+
+  <div id="app-wrapper">
+    <div class="school-logo">
+      <img src="logo.png" alt="โลโก้โรงเรียนวิศานุสรณ์"
+        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\'/%3E'" />
     </div>
 
     <header class="app-header">
       <h1>ธนาคารโรงเรียนวิศานุสรณ์</h1>
       <p>ระบบจัดการบัญชีและธุรกรรม</p>
+      <div class="app-version">Version 3.0.0</div>
     </header>
 
-    <div id="app" class="app-container"></div>
+    <!-- VIEWS -->
 
-    <div
-      id="historyPage"
-      class="app-container history-page"
-      style="display: none"
-    >
-      <h2>ประวัติการทำรายการ</h2>
-      <ul id="historyList" class="history-list"></ul>
-      <button class="button" onclick="window.backToMain()">ย้อนกลับ</button>
-    </div>
-
-    <div
-      id="studentHistoryPage"
-      class="app-container student-history-page"
-      style="display: none"
-    >
-      <h2>ประวัติการทำรายการนักเรียน: <span id="studentHistoryName"></span></h2>
-      <ul id="studentHistoryList" class="history-list"></ul>
-      <button class="button" onclick="window.backToAdminPage()">
-        ย้อนกลับไปหน้า Admin
+    <!-- LOGIN VIEW -->
+    <div id="loginView" class="glass-container auth-wrapper">
+      <h2>เข้าสู่ระบบ</h2>
+      <div class="input-group">
+        <label for="loginId">รหัสสมาชิกผู้ดูแล (Staff/Admin/HeadAdmin):</label>
+        <input type="text" id="loginId" class="input-field" placeholder="ป้อนรหัส"
+          onkeypress="if(event.key === 'Enter') window.wisa.login()" />
+      </div>
+      <button class="button button--info" style="width: 100%" onclick="window.wisa.login()">
+        <span style="font-size: 1.2rem">🔐</span> เข้าสู่ระบบ
       </button>
     </div>
 
-    <div
-      id="dateSearchPage"
-      class="app-container history-page"
-      style="display: none"
-    >
-      <h2>ผลการค้นหาตามวันที่</h2>
-      <div class="summary-box">
-        <p>
-          <strong>ยอดฝากรวม:</strong>
-          <span id="totalDepositAmount">0.00</span> บาท
-        </p>
-        <p>
-          <strong>ยอดถอนรวม:</strong>
-          <span id="totalWithdrawalAmount">0.00</span> บาท
-        </p>
+    <!-- ADMIN DASHBOARD VIEW -->
+    <div id="adminView" class="glass-container full-width hidden">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+        <h2><span style="font-size: 1.8rem">👑</span> แผงควบคุมผู้ดูแล: <span id="adminDashName"></span> (<span
+            id="adminDashRoleBadge" style="color: var(--primary-color)"></span>)</h2>
+        <button class="button button--danger" onclick="window.wisa.logout()">ออกจากระบบ</button>
       </div>
-      <ul id="dateSearchResult" class="history-list"></ul>
-      <button class="button" onclick="window.backToMain()">ย้อนกลับ</button>
+
+      <div class="dashboard-actions">
+        <!-- Quick Actions -->
+        <div class="action-card" onclick="window.wisa.showCreateAccount()">
+          <div class="icon">👤</div>
+          <h4>สร้างบัญชีใหม่</h4>
+          <p>เพิ่มบัญชีนักเรียน</p>
+        </div>
+        <div class="action-card head-admin-only hidden" onclick="window.wisa.promptCalculateInterest()">
+          <div class="icon">📈</div>
+          <h4>คำนวณดอกเบี้ย</h4>
+          <p>เพิ่ม / รีเซ็ต ดอกเบี้ยทุกบัญชี</p>
+        </div>
+        <div class="action-card head-admin-only hidden" onclick="window.exportAllAccountsToExcel()">
+          <div class="icon">📤</div>
+          <h4>ส่งออกข้อมูล</h4>
+          <p>ดาวน์โหลดบัญชีทั้งหมดเป็น Excel</p>
+        </div>
+
+        <!-- Head Admin Only Actions -->
+        <div class="action-card head-admin-only hidden" onclick="window.wisa.showCreateAdmin()">
+          <div class="icon">🛡️</div>
+          <h4>เพิ่มแอดมิน/สตาฟ</h4>
+          <p>สร้างบัญชีผู้ดูแลระบบ</p>
+        </div>
+        <div class="action-card admin-or-head hidden" onclick="window.wisa.showView('adminHistoryView')">
+          <div class="icon">📜</div>
+          <h4>ประวัติการทำงาน</h4>
+          <p>ดู Log สตาฟ/แอดมิน</p>
+        </div>
+      </div>
+
+      <!-- Search and Filters -->
+      <h3>ค้นหาและจัดการบัญชี</h3>
+      <div class="row-filters" style="align-items: flex-end;">
+        <div class="input-group" style="flex: 2;">
+          <label>ค้นหานักเรียน (รหัส หรือ ชื่อ):</label>
+          <input type="text" id="searchInput" class="input-field" placeholder="พิมพ์ค้นหา..."
+            oninput="window.wisa.filterUserList()" />
+        </div>
+        <div class="input-group">
+          <label>ค้นหารายการตามวันที่:</label>
+          <input type="date" id="searchDateInput" class="input-field" />
+        </div>
+        <button class="button button--info" style="margin-bottom: 3px;" onclick="window.wisa.searchByDate()">🔍
+          ค้นหาประวัติ</button>
+        <div style="flex: 1"></div>
+        <button class="button button--danger head-admin-only hidden" style="margin-bottom: 3px;"
+          onclick="window.wisa.promptClearDB()">🗑️ ล้างข้อมูลทั้งหมด</button>
+      </div>
+
+      <div class="row-filters" style="margin-bottom: 20px; gap: 10px;">
+        <div class="stat-box" style="flex: 1; padding: 15px; text-align: center;">
+          <h4 style="margin:0; color: var(--text-muted)">ยอดเงินฝากรวม</h4>
+          <h2 style="margin: 5px 0 0 0; color: var(--success-hover)">💰 <span id="systemTotalBalance">0.00</span> ฿</h2>
+        </div>
+        <div class="stat-box" style="flex: 1; padding: 15px; text-align: center;">
+          <h4 style="margin:0; color: var(--text-muted)">ยอดดอกเบี้ยรวม</h4>
+          <h2 style="margin: 5px 0 0 0; color: var(--info-color)">📈 <span id="systemTotalInterest">0.00</span> ฿</h2>
+        </div>
+        <div class="stat-box"
+          style="flex: 1; padding: 15px; text-align: center; border: 2px solid var(--primary-color);">
+          <h4 style="margin:0; color: var(--primary-color)">ยอดเงินสุทธิทั้งหมด</h4>
+          <h2 style="margin: 5px 0 0 0; color: var(--primary-color)">🏆 <span id="systemGrandTotal">0.00</span> ฿</h2>
+        </div>
+      </div>
+
+      <!-- User List -->
+      <div class="card-grid" id="adminUserList"></div>
+
+      <!-- Admin List (Head Only) -->
+      <div class="head-admin-only hidden mt-6">
+        <h3>รายชื่อแอดมินในระบบ</h3>
+        <div class="card-grid" id="adminAdminList"></div>
+      </div>
     </div>
 
-    <div
-      id="transactionPage"
-      class="app-container transaction-page"
-      style="display: none"
-    >
-      <h2>ทำรายการเงิน (สำหรับแอดมิน)</h2>
-      <p>
-        บัญชี: <strong id="transactionStudentName"></strong> (<span
-          id="transactionStudentId"
-        ></span
-        >)
-      </p>
-      <p>
-        ยอดเงินปัจจุบัน: <strong id="transactionStudentBalance"></strong> บาท
-      </p>
+    <!-- TRANSACTION VIEW -->
+    <div id="transactionView" class="glass-container hidden">
+      <h2>ทำรายการ: <span id="txStudentName"></span></h2>
+      <p class="mb-4 text-muted">รหัส: <span id="txStudentId"></span> | ยอดเงินปัจจุบัน: <strong id="txStudentBalance"
+          style="color: var(--success-hover)"></strong> บาท</p>
+
       <div class="input-group">
-        <label for="transactionAmount">จำนวนเงิน:</label>
-        <input
-          type="number"
-          id="transactionAmount"
-          placeholder="ป้อนจำนวนเงิน"
-          class="input-field"
-        />
+        <label>จำนวนเงิน:</label>
+        <input type="number" id="txAmount" class="input-field" placeholder="ป้อนจำนวนเงิน (บาท)" />
+      </div>
+
+      <div class="button-group">
+        <button class="button button--success" onclick="window.wisa.performTx('deposit')">ฝากเงิน</button>
+        <button class="button button--danger" onclick="window.wisa.performTx('withdraw')">ถอนเงิน</button>
+        <button class="button button--secondary" onclick="window.wisa.backToAdmin()">ยกเลิก</button>
+      </div>
+    </div>
+
+    <!-- CREATE ACCOUNT VIEW -->
+    <div id="createAccountView" class="glass-container auth-wrapper hidden">
+      <h2>สร้างบัญชีนักเรียนใหม่</h2>
+      <div class="input-group">
+        <label>รหัสนักเรียน:</label>
+        <input type="text" id="regId" class="input-field" placeholder="เช่น 12345" />
+      </div>
+      <div class="input-group">
+        <label>ชื่อ-นามสกุล:</label>
+        <input type="text" id="regName" class="input-field" placeholder="ชื่อ นามสกุล" />
       </div>
       <div class="button-group">
-        <button
-          class="button button--success"
-          onclick="window.performDeposit()"
-        >
-          ฝากเงิน
-        </button>
-        <button
-          class="button button--danger"
-          onclick="window.performWithdraw()"
-        >
-          ถอนเงิน
-        </button>
-        <button class="button" onclick="window.backFromTransaction()">
-          ยกเลิก
-        </button>
+        <button class="button button--success" onclick="window.wisa.createAccount()">สร้างบัญชี</button>
+        <button class="button button--secondary" onclick="window.wisa.backToAdmin()">ยกเลิก</button>
       </div>
-      <p id="transactionMessage" class="message" style="display: none"></p>
     </div>
 
-    <div
-      id="adminHistoryPage"
-      class="app-container admin-history-page"
-      style="display: none"
-    >
-      <h2>ประวัติการกระทำของแอดมิน</h2>
-      <div class="filter-controls flex-column align-center margin-bottom-md">
-        <label for="adminFilterSelect" class="filter-label"
-          >กรองตาม Admin ID:</label
-        >
-        <select id="adminFilterSelect" class="filter-select"></select>
-        <label for="adminDateFilter" class="filter-label margin-top-sm"
-          >กรองตามวันที่:</label
-        >
-        <input type="date" id="adminDateFilter" class="filter-input" />
+    <!-- CREATE ADMIN VIEW -->
+    <div id="createAdminView" class="glass-container auth-wrapper hidden">
+      <h2>สร้างบัญชีผู้ดูแลระบบ (Admin/Staff)</h2>
+      <div class="input-group">
+        <label>รหัสผู้ดูแล:</label>
+        <input type="text" id="regAdminId" class="input-field" placeholder="ตั้งรหัสสำหรับล็อกอิน" />
       </div>
-      <ul id="adminHistoryList" class="admin-history-list"></ul>
-      <button class="button" onclick="window.backToMainFromAdminHistory()">
-        ย้อนกลับ
-      </button>
+      <div class="input-group">
+        <label>ชื่อผู้ดูแล:</label>
+        <input type="text" id="regAdminName" class="input-field" placeholder="ชื่อ นามสกุล" />
+      </div>
+      <div class="input-group">
+        <label>บทบาท (Role):</label>
+        <select id="regAdminRole" class="input-field"
+          style="background:#0f172a; color:#f8fafc; padding: 12px; border-radius: 8px;">
+          <option value="staff">Staff (ฝากถอนได้ ค้นหาประวัติเด็กได้)</option>
+          <option value="admin">Admin (คุม Staff ได้ ดูประวัติ Staff ได้)</option>
+        </select>
+      </div>
+      <div class="button-group">
+        <button class="button button--success" onclick="window.wisa.createAdmin()">สร้างบัญชีผู้ดูแล</button>
+        <button class="button button--secondary" onclick="window.wisa.backToAdmin()">ยกเลิก</button>
+      </div>
     </div>
 
-    <div
-      id="studentHistoryEditPage"
-      class="app-container student-history-edit-page"
-      style="display: none"
-    >
-      <h2>แก้ไขประวัติการทำรายการ</h2>
-      <p>
-        บัญชี: <strong id="historyEditStudentName"></strong> (<span
-          id="historyEditStudentId"
-        ></span
-        >)
-      </p>
-      <textarea
-        id="historyEditTextArea"
-        placeholder="แก้ไขประวัติรายการแต่ละบรรทัด..."
-      ></textarea>
-      <button
-        class="button button--success"
-        onclick="window.saveStudentHistory()"
-      >
-        บันทึกการแก้ไข
-      </button>
-      <button class="button" onclick="window.backFromStudentHistoryEdit()">
-        ย้อนกลับ
-      </button>
+    <!-- CALCULATE INTEREST VIEW -->
+    <div id="calculateInterestView" class="glass-container auth-wrapper hidden">
+      <h2>คำนวณดอกเบี้ย (ทั้งหมด)</h2>
+      <p class="mb-4 text-muted">ระบบจะเพิ่มดอกเบี้ยให้กับทุกบัญชีที่มีเงินฝาก</p>
+      <div class="input-group">
+        <label>เปอร์เซ็นต์ดอกเบี้ย (%):</label>
+        <input type="number" id="calcInterestPct" class="input-field" placeholder="เช่น 2 สำหรับ 2%" step="0.1" />
+      </div>
+      <div class="button-group">
+        <button class="button button--success"
+          onclick="window.wisa.performCalculateInterest()">คำนวณและเพิ่มดอกเบี้ย</button>
+        <button class="button button--danger" onclick="window.wisa.resetInterestPrompt()">🔄
+          รีเซ็ตดอกเบี้ยทั้งหมด</button>
+        <button class="button button--secondary" onclick="window.wisa.backToAdmin()">ยกเลิก</button>
+      </div>
     </div>
 
-    <div id="wisa-version-box" class="wisa-version-box">
-      Wisa Bank Version <span id="wisa-version"></span>
+    <!-- VIEW HISTORY / DATE SEARCH VIEW -->
+    <div id="historyView" class="glass-container hidden">
+      <h2 id="historyViewTitle">ประวัติการทำรายการ</h2>
+      <div id="searchSummaryBox" class="stat-box hidden" style="padding: 15px; margin-bottom: 20px;">
+        <p><strong>ยอดฝากรวม:</strong> <span id="searchTotalDeposit" style="color:var(--success-hover)">0.00</span> บาท
+        </p>
+        <p><strong>ยอดถอนรวม:</strong> <span id="searchTotalWithdraw" style="color:var(--danger-hover)">0.00</span> บาท
+        </p>
+      </div>
+      <ul id="historyViewList" class="history-list mb-6"></ul>
+      <button class="button button--secondary" onclick="window.wisa.backToAdmin()">ย้อนกลับ</button>
     </div>
 
-    <script type="module">
-      // ===== DELETE MATH SECURITY =====
-      let correctMathAnswer = null;
+    <!-- EDIT HISTORY VIEW -->
+    <div id="editHistoryView" class="glass-container hidden">
+      <h2>แก้ไขประวัติ: <span id="editHistName"></span></h2>
+      <p class="mb-4 text-muted">รหัส: <span id="editHistId"></span></p>
+      <div class="input-group">
+        <label>แก้ไขข้อความประวัติทีละบรรทัด:</label>
+        <textarea id="editHistArea" class="input-field" rows="10"
+          style="resize: vertical; font-family: monospace;"></textarea>
+      </div>
+      <div class="button-group">
+        <button class="button button--warning" onclick="window.wisa.saveHistory()">บันทึกการแก้ไข</button>
+        <button class="button button--secondary" onclick="window.wisa.backToAdmin()">ยกเลิก</button>
+      </div>
+    </div>
 
-      function generateTimeBasedMathQuestion() {
-        const now = new Date();
-
-        const h = now.getHours();
-        const m = now.getMinutes();
-        const s = now.getSeconds();
-
-        const a = (h + 3) * 2 + 7;
-        const b = (m % 9) + 2;
-        const c = (s % 7) + 5;
-        const d = (h % 4) + 2;
-        const e = (m % 11) + 10;
-
-        const answer = Math.floor((a * b - c) / d + e);
-        correctMathAnswer = answer;
-
-        return {
-          question: `(${a} × ${b} − ${c}) ÷ ${d} + ${e} = ?`,
-          timeHint: `⏱️ เวลาอ้างอิง: ${h}:${m}:${s}`,
-        };
-      }
-
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-      import {
-        getDatabase,
-        ref,
-        set,
-        get,
-        update,
-        remove,
-        push,
-        onValue,
-      } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-      import * as XLSX from "https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs";
-
-      const firebaseConfig = {
-        apiKey: "AIzaSyDy31hx7IoFqfvXZWeRwTtWjkq8BdmyEic",
-        authDomain: "wisabank-6633b.firebaseapp.com",
-        databaseURL:
-          "https://wisabank-6633b-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "wisabank-6633b",
-        storageBucket: "wisabank-6633b.appspot.com",
-        messagingSenderId: "239494442017",
-        appId: "1:239494442017:web:7a9b4a0c3d2f8f8b392acd",
-      };
-      import {
-        getAuth,
-        EmailAuthProvider,
-        reauthenticateWithCredential,
-      } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
-
-      const $ = (id) => document.getElementById(id);
-      let currentId = null;
-      let currentName = "";
-      let currentStudentToManage = null;
-      let currentTransactionStudentId = null; // Added for transaction page
-
-      const WISA_VERSION = "v2.2.3";
-      document.getElementById("wisa-version").textContent = WISA_VERSION;
-      window.WISA_VERSION = WISA_VERSION;
-
-      window.toggleDropdown = (id) => {
-        document.getElementById(id).classList.toggle("show");
-      };
-
-      window.onclick = function (event) {
-        if (!event.target.matches(".dropbtn")) {
-          const dropdowns = document.getElementsByClassName("dropdown-content");
-          for (let i = 0; i < dropdowns.length; i++) {
-            const openDropdown = dropdowns[i];
-            if (openDropdown.classList.contains("show")) {
-              openDropdown.classList.remove("show");
-            }
-          }
-        }
-      };
-
-      window.showAdminManagement = () => {
-        const contentArea = document.getElementById("adminContentArea");
-        if (contentArea) {
-          contentArea.innerHTML =
-            "<h3>หน้าจัดการผู้ดูแลระบบ (สำหรับ Head Admin)</h3><p>คุณสามารถเพิ่ม ลบ หรือแก้ไขข้อมูลแอดมินได้ที่นี่</p>";
-        } else {
-          $("app").innerHTML = `
-            <h2>จัดการผู้ดูแลระบบ</h2>
-            <p>คุณสามารถจัดการผู้ดูแลระบบที่นี่</p>
-            <button class="button" onclick="window.updateAdminView()">ย้อนกลับ</button>
-        `;
-        }
-        window.toggleDropdown("adminDropdownContent");
-      };
-
-      function exportHistoryToExcel(history, userName) {
-        // ... เนื้อหาฟังก์ชัน exportHistoryToExcel
-      }
-      window.exportHistoryToExcel = exportHistoryToExcel;
-
-      // ย้ายการกำหนดฟังก์ชัน exportAllAccountsToExcel มาไว้ตรงนี้
-      window.exportAllAccountsToExcel = async () => {
-        try {
-          const snap = await get(ref(db, "accounts"));
-          const accounts = snap.val() || {};
-          const wsData = [
-            [
-              "รหัสนักเรียน",
-              "ชื่อ-นามสกุล",
-              "ยอดเงินคงเหลือ (บาท)",
-              "ประวัติรายการ",
-            ],
-          ];
-          for (const id in accounts) {
-            const account = accounts[id];
-            const historyText = Array.isArray(account.history)
-              ? account.history.join(" | ")
-              : "";
-            wsData.push([id, account.name, account.balance, historyText]);
-          }
-          const worksheet = XLSX.utils.aoa_to_sheet(wsData);
-          const workbook = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(
-            workbook,
-            worksheet,
-            "ข้อมูลบัญชีทั้งหมด",
-          );
-          const safeFileName = `all_accounts_${new Date()
-            .toLocaleDateString("th-TH")
-            .replace(/\//g, "-")}.xlsx`;
-          XLSX.writeFile(workbook, safeFileName);
-          alert("ส่งออกข้อมูลบัญชีทั้งหมดเรียบร้อยแล้ว");
-          logAdminAction(
-            "export_all_accounts",
-            "ส่งออกข้อมูลบัญชีทั้งหมดไปยัง Excel",
-          );
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการส่งออกข้อมูลบัญชี: " + error.message);
-          console.error("Error exporting all accounts:", error);
-        }
-      };
-
-      async function logAdminAction(actionType, details) {
-        // ... เนื้อหาฟังก์ชัน logAdminAction
-      }
-
-      window.onload = () => {
-        window.showLogin();
-      };
-
-      window.showRegister = () => {
-        $("app").innerHTML = `
-        <h2>สร้างบัญชีใหม่</h2>
+    <!-- ADMIN HISTORY VIEW -->
+    <div id="adminHistoryView" class="glass-container full-width hidden">
+      <h2>ประวัติการทำงานของแอดมิน</h2>
+      <div class="row-filters">
         <div class="input-group">
-          <label for="registerId">รหัสนักเรียน:</label>
-          <input type="text" id="registerId" placeholder="รหัสนักเรียน" class="input-field"/>
+          <label>ฟิลเตอร์ตาม Admin ID:</label>
+          <select id="adminLogIdFilter" class="input-field" onchange="window.wisa.renderAdminLogs()"></select>
         </div>
         <div class="input-group">
-          <label for="registerName">ชื่อ-นามสกุล:</label>
-          <input type="text" id="registerName" placeholder="ชื่อ-นามสกุล" class="input-field"/>
+          <label>ฟิลเตอร์ตามวันที่:</label>
+          <input type="date" id="adminLogDateFilter" class="input-field" onchange="window.wisa.renderAdminLogs()" />
         </div>
-        <button class="button" onclick="window.register()">สร้างบัญชี</button>
-      `;
-      };
+      </div>
+      <ul id="adminLogsList" class="history-list mb-6"></ul>
+      <button class="button button--secondary" onclick="window.wisa.backToAdmin()">ย้อนกลับ</button>
+    </div>
 
-      window.register = async () => {
-        const id = $("registerId").value.trim();
-        const name = $("registerName").value.trim();
-        if (!id || !name) {
-          alert("กรุณากรอกข้อมูลให้ครบ");
-          return;
-        }
+  </div>
 
-        try {
-          const snap = await get(ref(db, `accounts/${id}`));
-          if (snap.exists()) {
-            alert("รหัสนี้มีอยู่แล้ว");
-            return;
-          }
-
-          const adminSnap = await get(ref(db, `admins/${id}`));
-          if (
-            adminSnap.exists() ||
-            id === "admin123" ||
-            id === "headadmin123"
-          ) {
-            alert(
-              "รหัสนี้ถูกใช้เป็น ID แอดมินแล้ว กรุณาเลือก ID อื่นสำหรับบัญชี",
-            );
-            return;
-          }
-
-          await set(ref(db, `accounts/${id}`), {
-            name,
-            balance: 0,
-            history: [],
-          });
-          alert("สร้างบัญชีเรียบร้อยแล้ว");
-          if (currentId) {
-            logAdminAction("create_account", `สร้างบัญชี: ${name} (ID: ${id})`);
-          }
-          if (currentId === "headadmin123") window.updateHeadAdminView();
-          else window.updateAdminView();
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการสร้างบัญชี: " + error.message);
-          console.error("Error registering account:", error);
-        }
-      };
-
-      window.showLogin = () => {
-        $("app").innerHTML = `
-        <div id="loginPage">
-          <h2>เข้าสู่ระบบ</h2>
-          <div class="input-group">
-            <label for="username">Username:</label>
-            <input type="text" id="username" class="input-field" />
-          </div>
-          <div class="input-group">
-            <label for="password">Password:</label>
-            <input type="password" id="password" class="input-field" />
-          </div>
-          <div class="button-group">
-            <button class="button" onclick="window.login()">เข้าสู่ระบบ</button>
-          </div>
-        </div>
-      `;
-      };
-
-      window.login = async () => {
-        const id = $("username").value.trim();
-        const password = $("password").value.trim();
-
-        if (!id || !password) {
-          alert("กรุณากรอก Username และ Password");
-          return;
-        }
-
-        try {
-          const adminSnap = await get(ref(db, `admins/${id}`));
-
-          // ตรวจสอบข้อมูลผู้ดูแลระบบจาก Firebase
-          if (adminSnap.exists()) {
-            const adminData = adminSnap.val();
-
-            // เปรียบเทียบรหัสผ่าน (ตอนนี้รหัสผ่านถูกเก็บใน Firebase แล้ว)
-            if (password === adminData.password) {
-              currentId = id;
-              currentName = adminData.name || "Admin"; // ใช้ชื่อจาก Firebase หรือ "Admin" เป็นค่าเริ่มต้น
-
-              // กำหนดบทบาทจาก Firebase
-              const adminRole = adminData.role || "admin";
-
-              // ตรวจสอบบทบาทเพื่ออัพเดตหน้าจอ
-              if (adminRole === "headadmin") {
-                window.updateHeadAdminView();
-              } else {
-                window.updateAdminView();
-              }
-              return;
-            } else {
-              alert("รหัสผ่านไม่ถูกต้อง");
-              return;
-            }
-          }
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการเข้าสู่ระบบ: " + error.message);
-          console.error("Error logging in:", error);
-          return;
-        }
-
-        // กรณีไม่พบ ID ผู้ใช้งานนี้ในระบบ admins
-        alert("ไม่พบรหัสผู้ใช้งานนี้ในระบบแอดมิน");
-      };
-
-      window.deposit = async (studentId, amountValue) => {
-        const amt = parseFloat(amountValue);
-        if (isNaN(amt) || amt <= 0) {
-          alert("จำนวนเงินต้องเป็นตัวเลขที่มากกว่า 0");
-          return;
-        }
-        try {
-          const refPath = ref(db, `accounts/${studentId}`);
-          const snap = await get(refPath);
-          if (!snap.exists()) {
-            alert("ไม่พบข้อมูลบัญชี");
-            return;
-          }
-          const data = snap.val();
-          data.balance = typeof data.balance !== "number" ? 0 : data.balance;
-          data.history = !Array.isArray(data.history) ? [] : data.history;
-          data.balance += amt;
-          const adminWhoDeposited = currentName || currentId;
-          const logEntry = `ฝาก ${amt} บาท (โดย ${adminWhoDeposited}) (${new Date().toLocaleDateString(
-            "th-TH",
-          )})`;
-          data.history.unshift(logEntry);
-          await update(refPath, data);
-          alert(
-            `ฝากเงิน ${amt} บาท ให้ ${data.name} (${studentId}) เรียบร้อยแล้ว`,
-          );
-          logAdminAction("deposit", {
-            studentId: studentId,
-            studentName: data.name,
-            amount: amt,
-          });
-          // Instead of backFromTransaction directly, update the balance on the transaction page
-          $("transactionStudentBalance").textContent = data.balance;
-          $("transactionMessage").textContent =
-            `ฝากเงิน ${amt} บาท สำเร็จ! ยอดคงเหลือ: ${data.balance} บาท`;
-          $("transactionMessage").className = "message success-message";
-          $("transactionMessage").style.display = "block";
-          $("transactionAmount").value = ""; // Clear amount field
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการฝากเงิน: " + error.message);
-          console.error("Error depositing:", error);
-          $("transactionMessage").textContent =
-            `เกิดข้อผิดพลาดในการฝากเงิน: ${error.message}`;
-          $("transactionMessage").className = "message error-message";
-          $("transactionMessage").style.display = "block";
-        }
-      };
-
-      // Add these two functions to make them globally accessible and call your existing logic
-      window.performDeposit = async () => {
-        const amount = parseFloat(
-          document.getElementById("transactionAmount").value,
-        );
-        if (isNaN(amount) || amount <= 0) {
-          // You can replace this alert with your displayMessage function if you prefer
-          alert("กรุณาป้อนจำนวนเงินที่ถูกต้อง");
-          return;
-        }
-        // Call your existing deposit logic
-        await window.deposit(currentTransactionStudentId, amount);
-      };
-
-      window.performWithdraw = async () => {
-        const amount = parseFloat(
-          document.getElementById("transactionAmount").value,
-        );
-        if (isNaN(amount) || amount <= 0) {
-          // You can replace this alert with your displayMessage function if you prefer
-          alert("กรุณาป้อนจำนวนเงินที่ถูกต้อง");
-          return;
-        }
-        // Call your existing adminWithdraw logic
-        await window.adminWithdraw(currentTransactionStudentId, amount);
-      };
-
-      window.adminWithdraw = async (studentId, amountValue) => {
-        const amt = parseFloat(amountValue);
-        if (isNaN(amt) || amt <= 0) {
-          alert("จำนวนเงินต้องเป็นตัวเลขที่มากกว่า 0");
-          return;
-        }
-        try {
-          const refPath = ref(db, `accounts/${studentId}`);
-          const snap = await get(refPath);
-          if (!snap.exists()) {
-            alert("ไม่พบข้อมูลบัญชี");
-            return;
-          }
-          const data = snap.val();
-          data.balance = typeof data.balance !== "number" ? 0 : data.balance;
-          data.history = !Array.isArray(data.history) ? [] : data.history;
-          if (amt > data.balance) {
-            alert(
-              `ยอดเงิน ${data.name} (${studentId}) ไม่พอ (${data.balance} บาท)`,
-            );
-            $("transactionMessage").textContent =
-              `ยอดเงิน ${data.name} (${studentId}) ไม่พอ (${data.balance} บาท)`;
-            $("transactionMessage").className = "message error-message";
-            $("transactionMessage").style.display = "block";
-            return;
-          }
-          data.balance -= amt;
-          const adminWhoWithdrew = currentName || currentId;
-          const logEntry = `ถอน ${amt} บาท (โดย ${adminWhoWithdrew}) (${new Date().toLocaleDateString(
-            "th-TH",
-          )})`;
-          data.history.unshift(logEntry);
-          await update(refPath, data);
-          alert(
-            `ถอนเงิน ${amt} บาท จาก ${data.name} (${studentId}) เรียบร้อยแล้ว`,
-          );
-          logAdminAction("withdraw", {
-            studentId: studentId,
-            studentName: data.name,
-            amount: amt,
-          });
-          // Instead of backFromTransaction directly, update the balance on the transaction page
-          $("transactionStudentBalance").textContent = data.balance;
-          $("transactionMessage").textContent =
-            `ถอนเงิน ${amt} บาท สำเร็จ! ยอดคงเหลือ: ${data.balance} บาท`;
-          $("transactionMessage").className = "message success-message";
-          $("transactionAmount").value = ""; // Clear amount field
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการถอนเงิน: " + error.message);
-          console.error("Error withdrawing:", error);
-          $("transactionMessage").textContent =
-            `เกิดข้อผิดพลาดในการถอนเงิน: ${error.message}`;
-          $("transactionMessage").className = "message error-message";
-          $("transactionMessage").style.display = "block";
-        }
-      };
-
-      window.logout = () => {
-        currentId = null;
-        currentName = "";
-        currentStudentToManage = null;
-        window.showLogin();
-      };
-
-      window.deleteAccount = async (idToDelete) => {
-        if (
-          confirm(
-            "คุณต้องการลบบัญชีนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้!",
-          )
-        ) {
-          try {
-            const snap = await get(ref(db, `accounts/${idToDelete}`));
-            let deletedAccountName = "Unknown";
-            if (snap.exists()) {
-              deletedAccountName = snap.val().name;
-            }
-            await remove(ref(db, `accounts/${idToDelete}`));
-            alert("บัญชีถูกลบแล้ว");
-            logAdminAction(
-              "delete_account",
-              `ลบบัญชี: ${deletedAccountName} (ID: ${idToDelete})`,
-            );
-
-            if (currentId === "headadmin123") {
-              window.updateHeadAdminView();
-            } else if (currentId) {
-              window.updateAdminView();
-            } else {
-              window.showLogin();
-            }
-          } catch (error) {
-            alert("เกิดข้อผิดพลาดในการลบบัญชี: " + error.message);
-            console.error("Error deleting account:", error);
-          }
-        }
-      };
-
-      window.updateHeadAdminView = () => {
-        const container = $("app");
-        container.innerHTML = ``;
-        const allAccountsRef = ref(db, "accounts");
-
-        if (!currentName || currentName === currentId) {
-          currentName = "Head Admin";
-        }
-
-        container.innerHTML = `<h2>Head Admin - จัดการระบบ</h2>`;
-
-        const primaryActions = document.createElement("div");
-        primaryActions.className = "admin-section";
-        primaryActions.innerHTML = `
-        <h3>⭐ จัดการระบบหลัก</h3>
-        <button class="button button--success margin-bottom-sm" onclick="window.showRegister()">➕ สร้างบัญชีใหม่</button>
-      `;
-        container.appendChild(primaryActions);
-
-        const adminManageSection = document.createElement("div");
-        adminManageSection.className = "admin-section";
-        adminManageSection.innerHTML = `
-        <h3>👑 จัดการบัญชีแอดมิน</h3>
-        <button class="button button--success margin-bottom-sm" onclick="window.addAdmin()">➕ เพิ่มแอดมินใหม่</button>
-        <button class="button button--secondary" onclick="window.showAdminHistory()">📜 ดูประวัติแอดมิน</button>
-        <div id="adminList" class="admin-list-container"></div>
-      `;
-        container.appendChild(adminManageSection);
-        displayAdminList();
-
-        const studentManageSection = document.createElement("div");
-        studentManageSection.className = "admin-section";
-        studentManageSection.innerHTML = `<h3>👥 จัดการบัญชีทั้งหมด</h3>`;
-        container.appendChild(studentManageSection);
-
-        const dateSearchDiv = document.createElement("div");
-        dateSearchDiv.className =
-          "filter-controls flex-column align-center margin-bottom-md";
-        const dateInput = document.createElement("input");
-        dateInput.type = "date";
-        dateInput.id = "searchDate";
-        dateInput.className = "filter-input margin-bottom-sm";
-        const searchBtn = document.createElement("button");
-        searchBtn.textContent = "🔍 ค้นหารายการตามวันที่";
-        searchBtn.className = "button";
-        searchBtn.onclick = () => window.searchByDate(dateInput.value);
-
-        dateSearchDiv.appendChild(dateInput);
-        dateSearchDiv.appendChild(searchBtn);
-        studentManageSection.appendChild(dateSearchDiv);
-
-        onValue(allAccountsRef, (snapshot) => {
-          const data = snapshot.val() || {};
-          let totalBalance = 0;
-          const sortedEntries = Object.entries(data).sort((a, b) => {
-            const idA = String(a[0]);
-            const idB = String(b[0]);
-            return idA.localeCompare(idB, undefined, { numeric: true });
-          });
-
-          const existingStudentCards = studentManageSection.querySelectorAll(
-            ".user-card, .total-balance-summary",
-          );
-          existingStudentCards.forEach((card) => card.remove());
-
-          for (const [id, user] of sortedEntries) {
-            totalBalance += typeof user.balance === "number" ? user.balance : 0;
-
-            const userContainer = document.createElement("div");
-            userContainer.className = "user-card";
-
-            const header = document.createElement("div");
-            header.className = "user-card__header";
-            header.onclick = () => {
-              const expanded = menu.classList.toggle("is-expanded");
-              arrow.style.transform = expanded
-                ? "rotate(180deg)"
-                : "rotate(0deg)";
-            };
-
-            const nameElem = document.createElement("span");
-            nameElem.innerHTML = `<strong class="user-card__name">${user.name}</strong> (${id})<br><small class="user-card__balance">💰 ยอดเงิน: ${user.balance} บาท</small>`;
-
-            const arrow = document.createElement("span");
-            arrow.className = "user-card__arrow";
-            arrow.textContent = "▼";
-
-            header.appendChild(nameElem);
-            header.appendChild(arrow);
-
-            const menu = document.createElement("div");
-            menu.className = "user-card__menu";
-
-            const btns = [
-              [
-                "📜 ดูประวัติ",
-                () => window.showStudentHistory(id),
-                "button",
-                "",
-              ],
-              [
-                "✏️ แก้ไขประวัติ",
-                () => window.editStudentHistory(id),
-                "button button--warning",
-                "",
-              ],
-              [
-                "💰 ฝาก/ถอนเงิน",
-                () => window.showTransactionPage(id),
-                "button button--success",
-                "",
-              ],
-              [
-                "✏️ แก้ไขชื่อ",
-                () => window.editUserName(id, user.name),
-                "button button--purple",
-                "",
-              ],
-              [
-                "🆔 แก้ไข ID",
-                () => window.editUserId(id),
-                "button button--info",
-                "",
-              ],
-              [
-                "🗑️ ลบบัญชี",
-                () => window.deleteAccount(id),
-                "button button--danger",
-                "",
-              ],
-            ];
-
-            for (const [label, handler, className, textColor] of btns) {
-              const btn = document.createElement("button");
-              btn.textContent = label;
-              btn.className = className;
-              btn.style.color = textColor;
-              btn.onclick = handler;
-              menu.appendChild(btn);
-            }
-
-            userContainer.appendChild(header);
-            userContainer.appendChild(menu);
-            studentManageSection.appendChild(userContainer);
-          }
-
-          const totalDiv = document.createElement("div");
-          totalDiv.innerHTML = `<h3 class="total-balance-summary">💰 ยอดรวมทั้งหมดในระบบ: ${totalBalance.toLocaleString()} บาท</h3>`;
-          studentManageSection.appendChild(totalDiv);
-        });
-
-        const exportBtn = document.createElement("button");
-        exportBtn.textContent = "📤 ส่งออกบัญชีทั้งหมด (Excel)";
-        exportBtn.className = "button";
-        exportBtn.onclick = window.exportAllAccountsToExcel;
-        container.appendChild(exportBtn);
-
-        const clearDbBtn = document.createElement("button");
-        clearDbBtn.textContent = "🗑️ ล้างข้อมูลธนาคารทั้งหมด";
-        clearDbBtn.className = "button button--danger margin-top-md";
-        container.appendChild(clearDbBtn);
-
-        // ===== Modal =====
-        const modal = document.createElement("div");
-        modal.className = "modal-overlay";
-        modal.style.display = "none";
-        modal.innerHTML = `
-  <div class="modal">
-    <h2>⚠️ ล้างข้อมูลธนาคาร</h2>
-    <p class="warning">
-      การกระทำนี้จะลบข้อมูลทั้งหมดถาวร<br>
-      ไม่สามารถกู้คืนได้
-    </p>
-
-    <label id="mathQuestion" style="font-weight:bold;"></label>
-    <div id="mathTimeHint" style="font-size:12px; opacity:0.6;"></div>
-
-    <input
-      type="number"
-      id="mathAnswer"
-      placeholder="ใส่คำตอบ"
-      autocomplete="off"
-    />
-
-    <div class="modal-actions">
-      <button id="cancelDelete" class="button">ยกเลิก</button>
-      <button id="confirmDelete" class="button button--danger">
-        ลบข้อมูล
-      </button>
+  <!-- MODAL FOR CLEAR DB MATH CHALLENGE -->
+  <div id="mathModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="color: var(--danger-hover);">⚠️ ยืนยันการล้างข้อมูล</h2>
+      <p class="mb-4 text-muted">การกระทำนี้จะลบข้อมูลบัญชีและประวัติ<strong>ทั้งหมดอย่างถาวร</strong></p>
+      <div class="math-challenge">
+        <strong id="mathQuestion" style="font-size: 1.2rem;"></strong>
+        <p id="mathHint" class="text-muted mt-2" style="font-size: 0.9rem; margin:0;"></p>
+      </div>
+      <div class="input-group">
+        <input type="number" id="mathAnswer" class="input-field" placeholder="ใส่คำตอบตัวเลขที่นี่" />
+      </div>
+      <div class="button-group">
+        <button class="button button--danger" onclick="window.wisa.confirmClearDB()">ลบข้อมูลทั้งหมด</button>
+        <button class="button button--secondary" onclick="window.wisa.closeModal('mathModal')">ยกเลิก</button>
+      </div>
     </div>
   </div>
-`;
 
-        container.appendChild(modal);
+  <!-- MODAL FOR CALCULATE INTEREST CONFIRMATION -->
+  <div id="confirmInterestModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="color: var(--info-color);">📈 ยืนยันการคำนวณดอกเบี้ย</h2>
+      <p class="mb-4 text-muted">ระบบจะทำการเพิ่มดอกเบี้ย <strong id="confirmInterestPctDisplay"></strong>%
+        ให้กับทุกบัญชีที่มีเงินฝาก</p>
+      <p style="color: var(--warning-color); font-size: 0.9rem; margin-bottom: 20px;">* การกระทำนี้ไม่สามารถย้อนกลับได้
+        กรุณาตรวจสอบให้แน่ใจ</p>
+      <div class="button-group">
+        <button class="button button--success" onclick="window.wisa.executeCalculateInterest()">ยืนยัน
+          และเพิ่มดอกเบี้ย</button>
+        <button class="button button--secondary"
+          onclick="window.wisa.closeModal('confirmInterestModal')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
 
-        clearDbBtn.onclick = () => {
-          const { question, timeHint } = generateTimeBasedMathQuestion();
+  <!-- MODAL FOR RENAME USER -->
+  <div id="renameUserModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>✏️ แก้ไขชื่อนักเรียน</h2>
+      <p class="mb-4 text-muted">กำลังแก้ไขชื่อของรหัส <strong id="renameUserIdDisplay"></strong></p>
+      <div class="input-group">
+        <input type="text" id="renameInput" class="input-field" placeholder="ใส่ชื่อใหม่ที่ต้องการ" />
+      </div>
+      <div class="button-group">
+        <button class="button button--warning" onclick="window.wisa.executeRenameUser()">บันทึกการแก้ไข</button>
+        <button class="button button--secondary" onclick="window.wisa.closeModal('renameUserModal')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
 
-          modal.querySelector("#mathQuestion").textContent =
-            "🧮 แก้โจทย์นี้เพื่อยืนยัน: " + question;
+  <!-- MODAL FOR DELETE USER CONFIRMATION -->
+  <div id="confirmDeleteUserModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="color: var(--danger-hover);">🗑️ ยืนยันการลบบัญชี</h2>
+      <p class="mb-4 text-muted">คุณแน่ใจหรือไม่ที่จะลบบัญชีรหัส <strong id="deleteUserIdDisplay"
+          style="color: var(--danger-color)"></strong>?</p>
+      <p style="color: var(--warning-color); font-size: 0.9rem; margin-bottom: 20px;">*
+        ข้อมูลทั้งหมดรวมถึงประวัติจะถูกลบถาวร</p>
+      <div class="button-group">
+        <button class="button button--danger" onclick="window.wisa.executeDeleteUser()">ยืนยัน ลบบัญชี</button>
+        <button class="button button--secondary"
+          onclick="window.wisa.closeModal('confirmDeleteUserModal')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
 
-          modal.querySelector("#mathTimeHint").textContent = timeHint;
-          modal.querySelector("#mathAnswer").value = "";
+  <!-- MODAL FOR DELETE ADMIN CONFIRMATION -->
+  <div id="confirmDeleteAdminModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="color: var(--danger-hover);">🗑️ ยืนยันการลบแอดมิน</h2>
+      <p class="mb-4 text-muted">คุณแน่ใจหรือไม่ที่จะลบแอดมิน/สตาฟรหัส <strong id="deleteAdminIdDisplay"
+          style="color: var(--danger-color)"></strong>?</p>
+      <div class="button-group">
+        <button class="button button--danger" onclick="window.wisa.executeDeleteAdmin()">ยืนยัน ลบ</button>
+        <button class="button button--secondary"
+          onclick="window.wisa.closeModal('confirmDeleteAdminModal')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
 
-          modal.style.display = "flex";
-        };
+  <!-- MODAL FOR RESET INTEREST CONFIRMATION -->
+  <div id="confirmResetInterestModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 style="color: var(--danger-hover);">🔄 ยืนยันการรีเซ็ตดอกเบี้ย</h2>
+      <p class="mb-4 text-muted">ระบบจะทำการ<strong>ลบดอกเบี้ยทั้งหมด</strong>ของทุกบัญชีให้เป็น <strong>0</strong> บาท
+      </p>
+      <p style="color: var(--warning-color); font-size: 0.9rem; margin-bottom: 20px;">*
+        ประวัติดอกเบี้ยเก่าจะถูกลบออกด้วย การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+      <div class="button-group">
+        <button class="button button--danger" onclick="window.wisa.executeResetInterest()">ยืนยัน
+          รีเซ็ตดอกเบี้ย</button>
+        <button class="button button--secondary"
+          onclick="window.wisa.closeModal('confirmResetInterestModal')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
 
-        modal.querySelector("#cancelDelete").onclick = () => {
-          modal.style.display = "none";
-        };
+  <!-- APPLICATION LOGIC -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, set, get, update, remove, push, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import * as XLSX from "https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs";
 
-        modal.querySelector("#confirmDelete").onclick = async () => {
-          const userAnswer = Number(modal.querySelector("#mathAnswer").value);
+    const firebaseConfig = {
+      apiKey: "AIzaSyDy31hx7IoFqfvXZWeRwTtWjkq8BdmyEic",
+      authDomain: "wisabank-6633b.firebaseapp.com",
+      databaseURL: "https://wisabank-6633b-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "wisabank-6633b",
+      storageBucket: "wisabank-6633b.appspot.com",
+      messagingSenderId: "239494442017",
+      appId: "1:239494442017:web:7a9b4a0c3d2f8f8b392acd",
+    };
 
-          if (isNaN(userAnswer)) {
-            alert("กรุณาใส่คำตอบเป็นตัวเลข");
-            return;
-          }
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-          if (userAnswer !== correctMathAnswer) {
-            alert("❌ คำตอบไม่ถูกต้อง");
-            return;
-          }
+    // Global State
+    const state = {
+      user: null, // { id, name, role('student'|'admin'|'headadmin') }
+      accountsListener: null,
+      accounts: {},
+      adminLogs: {},
+      admins: {},
+      activeTxId: null,
+      activeHistId: null,
+      mathAnswer: null,
+      pendingInterestPct: null,
+      pendingRenameId: null,
+      pendingDeleteUserId: null,
+      pendingDeleteAdminId: null
+    };
 
-          await remove(ref(db, "accounts"));
-          await remove(ref(db, "transactions"));
-          await remove(ref(db, "history"));
-          await remove(ref(db, "admin_logs"));
+    // Constants
+    const HEAD_ADMIN_ID = "headadmin123";
+    const LEGACY_ADMIN_ID = "admin123";
 
-          alert("✅ ล้างข้อมูลธนาคารเรียบร้อยแล้ว");
-          modal.style.display = "none";
-          window.updateHeadAdminView();
-        };
+    // --- Utility Functions --- //
+    const $ = id => document.getElementById(id);
+    const escapeHtml = str => {
+      if (!str) return "";
+      const div = document.createElement("div");
+      div.innerText = String(str);
+      return div.innerHTML;
+    };
+    const escapeAttr = str => {
+      if (!str) return "";
+      return String(str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    };
+    const isValidFirebaseKey = (key) => {
+      if (!key || key.length === 0 || key.length > 128) return false;
+      return !/[.#$\[\]\/]/.test(key);
+    };
+    const showToast = (msg, type = "info") => {
+      const container = $("toast-container");
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+      toast.textContent = msg;
+      container.appendChild(toast);
+      // Trigger reflow
+      void toast.offsetWidth;
+      toast.classList.add("show");
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    };
+    const showLoader = (text = "กำลังโหลด...") => {
+      $("loader-text").innerText = text;
+      $("global-loader").style.display = "flex";
+    };
+    const hideLoader = () => { $("global-loader").style.display = "none"; };
 
-        const logoutBtn = document.createElement("button");
-        logoutBtn.textContent = "ออกจากระบบ";
-        logoutBtn.className = "button button--danger";
-        logoutBtn.onclick = window.logout;
-        container.appendChild(logoutBtn);
-      };
-
-      async function displayAdminList() {
-        const adminListDiv = $("adminList");
-        adminListDiv.innerHTML = "";
-        const adminsRef = ref(db, "admins");
-        const snap = await get(adminsRef);
-        const admins = snap.val();
-
-        if (!admins || Object.keys(admins).length === 0) {
-          adminListDiv.innerHTML +=
-            '<p class="text-muted text-center">ยังไม่มีบัญชีแอดมินเพิ่มเติม</p>';
-          return;
-        }
-
-        const ul = document.createElement("ul");
-        ul.className = "admin-list";
-
-        for (const adminId in admins) {
-          if (adminId === "admin123" || adminId === "headadmin123") continue;
-
-          const adminName = admins[adminId].name;
-          const li = document.createElement("li");
-          li.className = "admin-list__item";
-
-          const adminInfo = document.createElement("span");
-          adminInfo.className = "admin-list__item-info";
-          adminInfo.textContent = `${adminName} (ID: ${adminId})`;
-          li.appendChild(adminInfo);
-
-          const actionButtons = document.createElement("div");
-          actionButtons.className = "admin-list__actions";
-          const editPassBtn = document.createElement("button");
-          editPassBtn.textContent = "✏️ แก้รหัส";
-          editPassBtn.className = "button button--warning";
-          editPassBtn.onclick = () =>
-            window.editAdminPassword(adminId, adminName);
-          actionButtons.appendChild(editPassBtn);
-
-          const deleteBtn = document.createElement("button");
-          deleteBtn.textContent = "🗑️ ลบ";
-          deleteBtn.className = "button button--danger";
-          deleteBtn.onclick = () => window.deleteAdminAccount(adminId);
-          actionButtons.appendChild(deleteBtn);
-
-          li.appendChild(actionButtons);
-          ul.appendChild(li);
-        }
-        adminListDiv.appendChild(ul);
+    const showView = (viewId) => {
+      const views = ["loginView", "adminView", "transactionView", "createAccountView", "createAdminView", "calculateInterestView", "historyView", "editHistoryView", "adminHistoryView"];
+      views.forEach(v => {
+        const el = $(v);
+        if (el) el.classList.add("hidden");
+      });
+      const target = $(viewId);
+      if (target) {
+        target.classList.remove("hidden");
+        // Re-trigger animation
+        target.style.animation = 'none';
+        void target.offsetWidth;
+        target.style.animation = '';
       }
+    };
 
-      window.addAdmin = async () => {
-        const newAdminId = prompt(
-          "กรุณากรอก ID สำหรับแอดมินใหม่ (ไม่ควรซ้ำกับรหัสบัญชีหรือแอดมินที่มีอยู่):",
-        );
-        if (!newAdminId || newAdminId.trim() === "") {
-          alert("ID แอดมินต้องไม่เป็นค่าว่าง");
-          return;
-        }
-        if (newAdminId === "admin123" || newAdminId === "headadmin123") {
-          alert("ไม่สามารถใช้ ID นี้ได้ กรุณาเลือก ID อื่น");
-          return;
-        }
-        const newAdminName = prompt("กรุณากรอกชื่อสำหรับแอดมินใหม่:");
-        if (!newAdminName || newAdminName.trim() === "") {
-          alert("ชื่อแอดมินต้องไม่เป็นค่าว่าง");
-          return;
-        }
-        const newAdminPass = prompt("กรุณากำหนดรหัสผ่านสำหรับแอดมินใหม่:");
-        if (!newAdminPass || newAdminPass.trim() === "") {
-          alert("รหัสผ่านแอดมินต้องไม่เป็นค่าว่าง");
-          return;
-        }
-        try {
-          const adminRef = ref(db, `admins/${newAdminId}`);
-          const snap = await get(adminRef);
-          if (snap.exists()) {
-            alert("ID แอดมินนี้มีอยู่แล้ว กรุณาเลือก ID อื่น");
-          } else {
-            const studentSnap = await get(ref(db, `accounts/${newAdminId}`));
-            if (studentSnap.exists()) {
-              alert(
-                "ID นี้ถูกใช้เป็นรหัสบัญชีแล้ว กรุณาเลือก ID อื่นสำหรับแอดมิน",
-              );
-              return;
-            }
-            await set(adminRef, { name: newAdminName, password: newAdminPass });
-            alert("เพิ่มแอดมินใหม่เรียบร้อยแล้ว");
-            logAdminAction(
-              "add_admin",
-              `เพิ่มแอดมินใหม่: ${newAdminName} (ID: ${newAdminId})`,
-            );
-            displayAdminList();
-          }
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการเพิ่มแอดมิน: " + error.message);
-          console.error("Error adding admin:", error);
-        }
-      };
-
-      window.editAdminPassword = async (adminId, adminName) => {
-        const newPassword = prompt(
-          `กรุณากรอกรหัสผ่านใหม่สำหรับแอดมิน ${adminName} (ID: ${adminId}):`,
-        );
-        if (newPassword === null) {
-          return;
-        }
-        if (newPassword.trim() === "") {
-          alert("รหัสผ่านใหม่ต้องไม่เป็นค่าว่าง");
-          return;
-        }
-        try {
-          await update(ref(db, `admins/${adminId}`), { password: newPassword });
-          alert(
-            `แก้ไขรหัสผ่านสำหรับแอดมิน ${adminName} (ID: ${adminId}) เรียบร้อยแล้ว`,
-          );
-          logAdminAction(
-            "edit_admin_password",
-            `แก้ไขรหัสผ่านแอดมิน: ${adminName} (ID: ${adminId})`,
-          );
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการแก้ไขรหัสผ่านแอดมิน: " + error.message);
-          console.error("Error updating admin password:", error);
-        }
-      };
-
-      window.deleteAdminAccount = async (adminIdToDelete) => {
-        if (
-          confirm(
-            `คุณต้องการลบบัญชีแอดมิน ${adminIdToDelete} หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้!`,
-          )
-        ) {
-          if (
-            adminIdToDelete === "admin123" ||
-            adminIdToDelete === "headadmin123"
-          ) {
-            alert("ไม่สามารถลบบัญชีแอดมินหลักหรือ Head Admin ได้จากตรงนี้");
-            return;
-          }
-          try {
-            const snap = await get(ref(db, `admins/${adminIdToDelete}`));
-            let deletedAdminName = "Unknown";
-            if (snap.exists()) {
-              deletedAdminName = snap.val().name;
-            }
-            await remove(ref(db, `admins/${adminIdToDelete}`));
-            alert("บัญชีแอดมินถูกลบแล้ว");
-            logAdminAction(
-              "delete_admin",
-              `ลบบัญชีแอดมิน: ${deletedAdminName} (ID: ${adminIdToDelete})`,
-            );
-            displayAdminList();
-          } catch (error) {
-            alert("เกิดข้อผิดพลาดในการลบบัญชีแอดมิน: " + error.message);
-            console.error("Error deleting admin account:", error);
-          }
-        }
-      };
-
-      window.showAdminHistory = async () => {
-        $("app").style.display = "none";
-        $("adminHistoryPage").style.display = "block";
-        const adminHistoryList = $("adminHistoryList");
-        adminHistoryList.innerHTML = "";
-        const adminLogsRef = ref(db, "admin_logs");
-        const snapshot = await get(adminLogsRef);
-        const logs = snapshot.val();
-        const adminFilterSelect = $("adminFilterSelect");
-        adminFilterSelect.innerHTML = '<option value="">ทั้งหมด</option>';
-        const uniqueAdmins = new Set();
-        if (logs) {
-          for (const key in logs) {
-            uniqueAdmins.add(logs[key].adminId);
-          }
-        }
-        Array.from(uniqueAdmins)
-          .sort()
-          .forEach((adminId) => {
-            const option = document.createElement("option");
-            option.value = adminId;
-            option.textContent = adminId;
-            adminFilterSelect.appendChild(option);
-          });
-        renderAdminLogs(logs);
-        adminFilterSelect.onchange = () => renderAdminLogs(logs);
-        $("adminDateFilter").onchange = () => renderAdminLogs(logs);
-      };
-
-      function renderAdminLogs(allLogs) {
-        const adminHistoryList = $("adminHistoryList");
-        adminHistoryList.innerHTML = "";
-        const filterAdminId = $("adminFilterSelect").value;
-        const filterDate = $("adminDateFilter").value;
-        if (!allLogs) {
-          adminHistoryList.innerHTML =
-            "<li class='admin-history-item'>ไม่มีประวัติการกระทำของแอดมิน</li>";
-          return;
-        }
-        const sortedLogs = Object.values(allLogs).sort((a, b) => {
-          return new Date(b.timestamp) - new Date(a.timestamp);
+    const logAdminAction = async (actionType, details) => {
+      if (!state.user || state.user.role === 'student') return;
+      try {
+        await set(push(ref(db, "admin_logs")), {
+          adminId: state.user.id,
+          adminName: state.user.name,
+          adminRole: state.user.role,
+          actionType,
+          details,
+          timestamp: new Date().toISOString()
         });
-        let foundLogs = false;
-        for (const log of sortedLogs) {
-          if (filterAdminId && log.adminId !== filterAdminId) {
-            continue;
-          }
-          if (filterDate) {
-            const logDate = new Date(log.timestamp).toISOString().split("T")[0];
-            if (logDate !== filterDate) {
-              continue;
-            }
-          }
-          foundLogs = true;
-          const li = document.createElement("li");
-          li.className = "admin-history-list__item";
-          const date = new Date(log.timestamp).toLocaleString("th-TH", {
-            year: "numeric",
-            month: "numeric",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: false,
-          });
-          li.innerHTML = `
-            <strong>${date}</strong><br>
-            <strong>Admin ID:</strong> ${log.adminId}<br>
-            <strong>Action:</strong> ${log.actionType}<br>
-            <strong>Details:</strong> ${
-              typeof log.details === "object"
-                ? JSON.stringify(log.details)
-                : log.details
-            }
-          `;
-          adminHistoryList.appendChild(li);
-        }
-        if (!foundLogs) {
-          adminHistoryList.innerHTML =
-            "<li class='admin-history-list__item'>ไม่พบประวัติการกระทำของแอดมินตามตัวกรองที่เลือก</li>";
-        }
-      }
+      } catch (e) { console.error("Log error", e); }
+    };
 
-      window.backToMainFromAdminHistory = () => {
-        $("adminHistoryPage").style.display = "none";
-        $("app").style.display = "block";
-        if (currentId === "headadmin123") {
-          window.updateHeadAdminView();
-        } else {
-          window.updateAdminView();
-        }
-      };
+    // --- Core Methods --- //
+    const backToAdmin = () => {
+      showView("adminView");
+    };
 
-      window.updateAdminView = () => {
-        const container = $("app");
-        container.innerHTML = ``;
-        const allAccountsRef = ref(db, "accounts");
-        container.innerHTML = `<h2>สวัสดี, ${currentName}</h2>`;
-        const primaryActions = document.createElement("div");
-        primaryActions.className = "admin-section";
-        primaryActions.innerHTML = `
-          <h3>💡 เลือกฟังก์ชัน</h3>
-          <button class="button button--success margin-bottom-sm" onclick="window.showRegister()">➕ สร้างบัญชีใหม่</button>
-        `;
-        container.appendChild(primaryActions);
+    const loadDataListeners = () => {
+      if (state.accountsListener) return; // already listening
 
-        const studentManageSection = document.createElement("div");
-        studentManageSection.className = "admin-section";
-        studentManageSection.innerHTML = `<h3>👥 จัดการบัญชีนักเรียน</h3>`;
-        container.appendChild(studentManageSection);
-
-        const dateSearchDiv = document.createElement("div");
-        dateSearchDiv.className =
-          "filter-controls flex-column align-center margin-bottom-md";
-        const dateInput = document.createElement("input");
-        dateInput.type = "date";
-        dateInput.id = "searchDate";
-        dateInput.className = "filter-input margin-bottom-sm";
-        const searchBtn = document.createElement("button");
-        searchBtn.textContent = "🔍 ค้นหารายการตามวันที่";
-        searchBtn.className = "button";
-        searchBtn.onclick = () => window.searchByDate(dateInput.value);
-
-        dateSearchDiv.appendChild(dateInput);
-        dateSearchDiv.appendChild(searchBtn);
-        studentManageSection.appendChild(dateSearchDiv);
-
-        onValue(allAccountsRef, (snapshot) => {
-          const data = snapshot.val() || {};
-          let totalBalance = 0;
-
-          const sortedEntries = Object.entries(data).sort((a, b) => {
-            const idA = String(a[0]);
-            const idB = String(b[0]);
-            return idA.localeCompare(idB, undefined, { numeric: true });
-          });
-
-          const existingStudentCards =
-            studentManageSection.querySelectorAll(".user-card");
-          existingStudentCards.forEach((card) => card.remove());
-
-          for (const [id, user] of sortedEntries) {
-            totalBalance += typeof user.balance === "number" ? user.balance : 0;
-            const userContainer = document.createElement("div");
-            userContainer.className = "user-card";
-
-            const header = document.createElement("div");
-            header.className = "user-card__header";
-            header.onclick = () => {
-              const expanded = menu.classList.toggle("is-expanded");
-              arrow.style.transform = expanded
-                ? "rotate(180deg)"
-                : "rotate(0deg)";
-            };
-
-            const nameElem = document.createElement("span");
-            nameElem.innerHTML = `<strong class="user-card__name">${user.name}</strong> (${id})<br><small class="user-card__balance">💰 ยอดเงิน: ${user.balance} บาท</small>`;
-
-            const arrow = document.createElement("span");
-            arrow.className = "user-card__arrow";
-            arrow.textContent = "▼";
-
-            header.appendChild(nameElem);
-            header.appendChild(arrow);
-
-            const menu = document.createElement("div");
-            menu.className = "user-card__menu";
-
-            const btns = [
-              [
-                "📜 ดูประวัติ",
-                () => window.showStudentHistory(id),
-                "button",
-                "",
-              ],
-              [
-                "💰 ฝาก/ถอนเงิน",
-                () => window.showTransactionPage(id),
-                "button button--success",
-                "",
-              ],
-            ];
-
-            for (const [label, handler, className, textColor] of btns) {
-              const btn = document.createElement("button");
-              btn.textContent = label;
-              btn.className = className;
-              btn.style.color = textColor;
-              btn.onclick = handler;
-              menu.appendChild(btn);
-            }
-
-            userContainer.appendChild(header);
-            userContainer.appendChild(menu);
-            studentManageSection.appendChild(userContainer);
-          }
-          const oldSummary = studentManageSection.querySelector(
-            ".total-balance-summary",
-          );
-          if (oldSummary) oldSummary.remove();
-
-          const totalDiv = document.createElement("div");
-          totalDiv.innerHTML = `
-  <h3 class="total-balance-summary">
-    💰 ยอดรวมทั้งหมดในระบบ: ${totalBalance.toLocaleString()} บาท
-  </h3>
-`;
-          studentManageSection.appendChild(totalDiv);
-        });
-
-        const logoutBtn = document.createElement("button");
-        logoutBtn.textContent = "ออกจากระบบ";
-        logoutBtn.className = "button button--danger";
-        logoutBtn.onclick = window.logout;
-        container.appendChild(logoutBtn);
-      };
-
-      // Helper function to format date from YYYY-MM-DD to DD/MM/YYYY
-      function formatDateForComparison(dateString) {
-        if (!dateString) return "";
-        const [year, month, day] = dateString.split("-");
-        // Add 543 to the year for Thai Buddhist Era (B.E.)
-        return `${parseInt(day, 10)}/${parseInt(month, 10)}/${
-          parseInt(year, 10) + 543
-        }`;
-      }
-
-      // Function to search all student transactions by date
-      window.searchByDate = async (dateString) => {
-        const searchDateFormatted = formatDateForComparison(dateString);
-        if (!searchDateFormatted) {
-          alert("กรุณาเลือกวันที่ที่ต้องการค้นหา");
-          return;
-        }
-
-        $("app").style.display = "none";
-        $("dateSearchPage").style.display = "block";
-        const dateSearchResultList = $("dateSearchResult");
-        dateSearchResultList.innerHTML = ""; // Clear previous results
-
-        // Get elements for displaying sums and initialize them to 0.00
-        const totalDepositElement = $("totalDepositAmount");
-        const totalWithdrawalElement = $("totalWithdrawalAmount");
-        totalDepositElement.textContent = "0.00";
-        totalWithdrawalElement.textContent = "0.00";
-
-        let totalDeposit = 0;
-        let totalWithdrawal = 0;
-        let foundResults = false;
-
-        try {
-          const accountsSnapshot = await get(ref(db, "accounts"));
-          const allAccounts = accountsSnapshot.val() || {};
-
-          for (const studentId in allAccounts) {
-            const studentData = allAccounts[studentId];
-            const history = studentData.history || [];
-
-            history.forEach((entry) => {
-              // Extract date from history entry, assuming format like "... (DD/MM/YYYY)"
-              const dateMatch = entry.match(/\((\d{1,2}\/\d{1,2}\/\d{4})\)/);
-              if (dateMatch && dateMatch[1] === searchDateFormatted) {
-                foundResults = true;
-                const listItem = document.createElement("li");
-                listItem.className = "search-results__item account-item"; // Reuse existing styles
-
-                // Extract amount and type (deposit/withdrawal)
-                // This regex looks for "ฝาก" or "ถอน" followed by space, then numbers (with optional commas/dots) and "บาท"
-                const amountMatch = entry.match(/(ฝาก|ถอน)\s+([\d,.]+)\s+บาท/);
-                if (amountMatch) {
-                  const type = amountMatch[1]; // "ฝาก" or "ถอน"
-                  // Remove commas before parsing to float to ensure correct number conversion
-                  const amount = parseFloat(amountMatch[2].replace(/,/g, ""));
-
-                  if (type === "ฝาก") {
-                    totalDeposit += amount;
-                  } else if (type === "ถอน") {
-                    totalWithdrawal += amount;
-                  }
-                }
-
-                listItem.innerHTML = `
-                  <div class="account-name">${studentData.name} (ID: ${studentId})</div>
-                  <div class="account-id">${entry}</div>
-                `;
-                dateSearchResultList.appendChild(listItem);
-              }
-            });
-          }
-
-          // Update the display for total sums after processing all accounts
-          // Use toLocaleString for proper number formatting with 2 decimal places
-          totalDepositElement.textContent = totalDeposit.toLocaleString(
-            "th-TH",
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 },
-          );
-          totalWithdrawalElement.textContent = totalWithdrawal.toLocaleString(
-            "th-TH",
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 },
-          );
-
-          if (!foundResults) {
-            dateSearchResultList.innerHTML =
-              '<p class="text-muted text-center">ไม่พบรายการสำหรับวันที่นี้</p>';
-          }
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการค้นหาตามวันที่: " + error.message);
-          console.error("Error searching by date:", error);
-        }
-      };
-
-      // Function to show the transaction page
-      window.showTransactionPage = async (studentId) => {
-        currentTransactionStudentId = studentId; // Store the student ID
-        $("app").style.display = "none";
-        $("transactionPage").style.display = "block";
-        $("transactionMessage").style.display = "none"; // Hide message initially
-
-        try {
-          const snap = await get(ref(db, `accounts/${studentId}`));
-          if (snap.exists()) {
-            const studentData = snap.val();
-            $("transactionStudentName").textContent = studentData.name;
-            $("transactionStudentId").textContent = studentId;
-            $("transactionStudentBalance").textContent =
-              studentData.balance.toLocaleString("th-TH", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              });
-          } else {
-            alert("ไม่พบข้อมูลนักเรียน");
-            window.backFromTransaction();
-          }
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการดึงข้อมูลนักเรียน: " + error.message);
-          console.error("Error fetching student data for transaction:", error);
-          window.backFromTransaction();
-        }
-      };
-
-      window.backFromTransaction = () => {
-        $("transactionPage").style.display = "none";
-        $("app").style.display = "block";
-        $("transactionAmount").value = ""; // Clear amount
-        $("transactionMessage").style.display = "none"; // Hide message
-        if (currentId === "headadmin123") {
-          window.updateHeadAdminView();
-        } else {
-          window.updateAdminView();
-        }
-      };
-
-      window.showStudentHistory = async (studentId) => {
-        currentStudentToManage = studentId;
-        $("app").style.display = "none";
-        $("studentHistoryPage").style.display = "block";
-        const historyList = $("studentHistoryList");
-        historyList.innerHTML = "";
-        try {
-          const snap = await get(ref(db, `accounts/${studentId}`));
-          if (snap.exists()) {
-            const data = snap.val();
-            $("studentHistoryName").textContent = data.name;
-            if (data.history && data.history.length > 0) {
-              data.history.forEach((entry) => {
-                const li = document.createElement("li");
-                li.textContent = entry;
-                historyList.appendChild(li);
-              });
-            } else {
-              historyList.innerHTML =
-                "<li class='text-muted'>ไม่มีประวัติการทำรายการ</li>";
-            }
-          } else {
-            historyList.innerHTML =
-              "<li class='text-muted'>ไม่พบข้อมูลนักเรียน</li>";
-          }
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการดึงประวัติ: " + error.message);
-          console.error("Error fetching student history:", error);
-        }
-      };
-
-      window.backToAdminPage = () => {
-        $("studentHistoryPage").style.display = "none";
-        $("app").style.display = "block";
-        if (currentId === "headadmin123") {
-          window.updateHeadAdminView();
-        } else {
-          window.updateAdminView();
-        }
-      };
-
-      window.backToMain = () => {
-        $("historyPage").style.display = "none";
-        $("dateSearchPage").style.display = "none";
-        $("app").style.display = "block";
-        if (currentId === "headadmin123") {
-          window.updateHeadAdminView();
-        } else {
-          window.updateAdminView();
-        }
-      };
-
-      window.editStudentHistory = async (studentId) => {
-        currentStudentToManage = studentId;
-        $("app").style.display = "none";
-        $("studentHistoryEditPage").style.display = "block";
-        $("historyEditTextArea").value = ""; // Clear previous content
-        try {
-          const snap = await get(ref(db, `accounts/${studentId}`));
-          if (snap.exists()) {
-            const data = snap.val();
-            $("historyEditStudentName").textContent = data.name;
-            $("historyEditStudentId").textContent = studentId;
-            if (Array.isArray(data.history) && data.history.length > 0) {
-              $("historyEditTextArea").value = data.history.join("\n");
-            } else {
-              $("historyEditTextArea").value = "ไม่มีประวัติการทำรายการ";
-            }
-          } else {
-            alert("ไม่พบข้อมูลนักเรียน");
-            window.backFromStudentHistoryEdit();
-          }
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการดึงประวัติเพื่อแก้ไข: " + error.message);
-          console.error("Error fetching history for edit:", error);
-        }
-      };
-
-      window.saveStudentHistory = async () => {
-        const studentId = currentStudentToManage;
-        const newHistoryText = $("historyEditTextArea").value;
-        let newHistoryArray = [];
-        if (
-          newHistoryText &&
-          newHistoryText.trim() !== "ไม่มีประวัติการทำรายการ"
-        ) {
-          newHistoryArray = newHistoryText
-            .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line !== "");
-        }
-
-        try {
-          await update(ref(db, `accounts/${studentId}`), {
-            history: newHistoryArray,
-          });
-          alert("บันทึกประวัติการแก้ไขเรียบร้อยแล้ว");
-          logAdminAction("edit_student_history", {
-            studentId: studentId,
-            oldHistory: "โปรดดูจาก log เก่า", // Can't store full old history here easily without another fetch
-            newHistory: newHistoryArray.join(" | "),
-          });
-          window.backFromStudentHistoryEdit();
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการบันทึกประวัติ: " + error.message);
-          console.error("Error saving student history:", error);
-        }
-      };
-
-      window.backFromStudentHistoryEdit = () => {
-        $("studentHistoryEditPage").style.display = "none";
-        $("app").style.display = "block";
-        if (currentId === "headadmin123") {
-          window.updateHeadAdminView();
-        } else {
-          window.updateAdminView();
-        }
-      };
-
-      window.editUserName = async (studentId, currentStudentName) => {
-        const newName = prompt(
-          `กรุณากรอกชื่อ-นามสกุลใหม่สำหรับ ${currentStudentName} (ID: ${studentId}):`,
-          currentStudentName,
-        );
-        if (newName === null || newName.trim() === "") {
-          alert("ชื่อ-นามสกุลไม่สามารถเป็นค่าว่างได้");
-          return;
-        }
-
-        try {
-          await update(ref(db, `accounts/${studentId}`), { name: newName });
-          alert(
-            `แก้ไขชื่อ-นามสกุลของ ${currentStudentName} (ID: ${studentId}) เป็น ${newName} เรียบร้อยแล้ว`,
-          );
-          logAdminAction("edit_user_name", {
-            studentId: studentId,
-            oldName: currentStudentName,
-            newName: newName,
-          });
-          if (currentId === "headadmin123") {
-            window.updateHeadAdminView();
-          } else {
-            window.updateAdminView();
-          }
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการแก้ไขชื่อ-นามสกุล: " + error.message);
-          console.error("Error editing user name:", error);
-        }
-      };
-
-      window.editUserId = async (oldStudentId) => {
-        const newStudentId = prompt(
-          `กรุณากรอก ID นักเรียนใหม่สำหรับ ${oldStudentId}: (ไม่สามารถย้อนกลับได้)`,
-          oldStudentId,
-        );
-
-        if (
-          newStudentId === null ||
-          newStudentId.trim() === "" ||
-          newStudentId === oldStudentId
-        ) {
-          alert("ID ใหม่ไม่ถูกต้อง หรือซ้ำกับ ID เดิม");
-          return;
-        }
-
-        // Check if new ID already exists in accounts or admins
-        try {
-          const newAccountSnap = await get(ref(db, `accounts/${newStudentId}`));
-          if (newAccountSnap.exists()) {
-            alert("ID นักเรียนใหม่นี้มีอยู่ในระบบบัญชีแล้ว กรุณาเลือก ID อื่น");
-            return;
-          }
-          const newAdminSnap = await get(ref(db, `admins/${newStudentId}`));
-          if (newAdminSnap.exists()) {
-            alert(
-              "ID นักเรียนใหม่นี้มีอยู่ในระบบแอดมินแล้ว กรุณาเลือก ID อื่น",
-            );
-            return;
-          }
-        } catch (error) {
-          console.error("Error checking new ID existence:", error);
-          alert("เกิดข้อผิดพลาดในการตรวจสอบ ID ใหม่: " + error.message);
-          return;
-        }
-
-        if (
-          !confirm(
-            `คุณแน่ใจหรือไม่ที่ต้องการเปลี่ยน ID จาก ${oldStudentId} เป็น ${newStudentId} การกระทำนี้ไม่สามารถย้อนกลับได้!`,
-          )
-        ) {
-          return;
-        }
-
-        try {
-          const oldAccountRef = ref(db, `accounts/${oldStudentId}`);
-          const oldAccountSnap = await get(oldAccountRef);
-
-          if (!oldAccountSnap.exists()) {
-            alert("ไม่พบข้อมูลบัญชีเก่า");
-            return;
-          }
-
-          const accountData = oldAccountSnap.val();
-
-          // 1. Create new account with new ID
-          await set(ref(db, `accounts/${newStudentId}`), accountData);
-
-          // 2. Delete old account
-          await remove(oldAccountRef);
-
-          alert(
-            `เปลี่ยน ID บัญชีจาก ${oldStudentId} เป็น ${newStudentId} เรียบร้อยแล้ว`,
-          );
-          logAdminAction("edit_user_id", {
-            oldId: oldStudentId,
-            newId: newStudentId,
-            studentName: accountData.name,
-          });
-
-          if (currentId === "headadmin123") {
-            window.updateHeadAdminView();
-          } else {
-            window.updateAdminView();
-          }
-        } catch (error) {
-          alert("เกิดข้อผิดพลาดในการแก้ไข ID: " + error.message);
-          console.error("Error editing user ID:", error);
-        }
-      };
-
-      // Ensure the filterAdminLogs is called when the date or admin selection changes
-      document.addEventListener("DOMContentLoaded", () => {
-        const adminFilterSelect = $("adminFilterSelect");
-        const adminDateFilter = $("adminDateFilter");
-        if (adminFilterSelect) {
-          adminFilterSelect.addEventListener("change", window.filterAdminLogs);
-        }
-        if (adminDateFilter) {
-          adminDateFilter.addEventListener("change", window.filterAdminLogs);
+      // Listen to Accounts
+      state.accountsListener = onValue(ref(db, "accounts"), (snap) => {
+        state.accounts = snap.val() || {};
+        if (state.user && state.user.role !== 'student') {
+          renderAdminUserList();
         }
       });
-    </script>
-  </body>
+
+      // Fetch Admins if head
+      if (state.user?.role === 'headadmin') {
+        onValue(ref(db, "admins"), (snap) => {
+          state.admins = snap.val() || {};
+          renderAdminAdminList();
+        });
+
+        onValue(ref(db, "admin_logs"), (snap) => {
+          state.adminLogs = snap.val() || {};
+        });
+      }
+    };
+
+    const login = async () => {
+      const id = $("loginId").value.trim();
+      if (!id) return showToast("กรุณากรอกรหัส", "error");
+      if (!isValidFirebaseKey(id)) return showToast("รหัสไม่ถูกต้อง ห้ามมีอักขระพิเศษ (.#$[]/)", "error");
+
+      showLoader("กำลังเข้าสู่ระบบ...");
+      try {
+        const roleMapping = { 'headadmin': 'Head Admin', 'admin': 'Admin', 'staff': 'Staff' };
+
+        // Check if Admin
+        const adminSnap = await get(ref(db, `admins/${id}`));
+        if (adminSnap.exists() || id === HEAD_ADMIN_ID || id === LEGACY_ADMIN_ID) {
+          const adData = adminSnap.exists() ? adminSnap.val() : { name: "System Admin", role: id === HEAD_ADMIN_ID ? 'headadmin' : 'admin' };
+          const role = adData.role || 'staff';
+          state.user = { id, name: adData.name || "Admin", role: role };
+
+          $("adminDashName").innerText = state.user.name;
+          $("adminDashRoleBadge").innerText = roleMapping[role] || "Staff";
+
+          // Role Based Access Control
+          document.querySelectorAll('.head-admin-only').forEach(el => {
+            if (role === 'headadmin') el.classList.remove('hidden');
+            else el.classList.add('hidden');
+          });
+          document.querySelectorAll('.admin-or-head').forEach(el => {
+            if (role === 'headadmin' || role === 'admin') el.classList.remove('hidden');
+            else el.classList.add('hidden');
+          });
+
+          loadDataListeners();
+          showView("adminView");
+          showToast(`เข้าสู่ระบบสำเร็จ สถานะ: ${roleMapping[role]}`, "success");
+        } else {
+          showToast("ไม่พบรหัสผู้ดูแลในระบบ (ไม่อนุญาตให้นักเรียนเข้าสู่ระบบ)", "error");
+        }
+      } catch (err) {
+        showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", "error");
+        console.error(err);
+      } finally {
+        hideLoader();
+      }
+    };
+
+    const logout = () => {
+      state.user = null;
+      $("loginId").value = "";
+      showView("loginView");
+      showToast("ออกจากระบบแล้ว");
+    };
+
+    // --- Admin Functions --- //
+    const renderAdminUserList = () => {
+      const g = $("adminUserList");
+      if (!g) return;
+      g.innerHTML = "";
+      let totalBal = 0;
+      let totalIntr = 0;
+
+      Object.entries(state.accounts).forEach(([id, u]) => {
+        const bal = Number(u.balance || 0);
+        const intr = Number(u.interest || 0);
+        totalBal += bal;
+        totalIntr += intr;
+
+        const card = document.createElement("div");
+        card.className = "user-card";
+        card.dataset.id = id.toLowerCase();
+        card.dataset.name = (u.name || "").toLowerCase();
+
+        card.innerHTML = `
+          <div class="user-card__header" onclick="this.parentElement.classList.toggle('is-expanded')">
+            <div class="user-card__info">
+              <div class="user-card__name">${escapeHtml(u.name)}</div>
+              <div class="user-card__id">ID: ${escapeHtml(id)}</div>
+              <div class="user-card__balance-badge" style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+                <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted); padding: 0;">ฝาก: ${bal.toLocaleString("th-TH")} ฿ | ดอกเบี้ย: ${intr.toLocaleString("th-TH")} ฿</span>
+                <span style="font-size: 1.1rem; padding: 0;">รวม: ${(bal + intr).toLocaleString("th-TH")} ฿</span>
+              </div>
+            </div>
+            <div class="user-card__arrow">▼</div>
+          </div>
+          <div class="user-card__content">
+            <button class="button button--success" onclick="window.wisa.openTx('${escapeAttr(id)}')">💰 ทำรายการ (ฝาก/ถอน)</button>
+            <button class="button button--info" onclick="window.wisa.viewHistory('${escapeAttr(id)}')">📜 ดูประวัติ</button>
+            <button class="button button--warning" onclick="window.wisa.openEditHist('${escapeAttr(id)}')">✏️ แก้ไขประวัติ</button>
+            <button class="button button--secondary" onclick="window.wisa.renameUser('${escapeAttr(id)}')">✏️ เปลี่ยนชื่อ</button>
+            ${state.user?.role === 'headadmin' ? `<button class="button button--danger" onclick="window.wisa.deleteUser('${escapeAttr(id)}')">🗑️ ลบ</button>` : ''}
+          </div>
+        `;
+        g.appendChild(card);
+      });
+      $("systemTotalBalance").innerText = totalBal.toLocaleString("th-TH", { minimumFractionDigits: 2 });
+      if ($("systemTotalInterest")) $("systemTotalInterest").innerText = totalIntr.toLocaleString("th-TH", { minimumFractionDigits: 2 });
+      if ($("systemGrandTotal")) $("systemGrandTotal").innerText = (totalBal + totalIntr).toLocaleString("th-TH", { minimumFractionDigits: 2 });
+      filterUserList(); // Ensure search persists through rerenders
+    };
+
+    const filterUserList = () => {
+      const term = ($("searchInput")?.value || "").toLowerCase();
+      const cards = document.querySelectorAll(".user-card");
+      cards.forEach(c => {
+        const id = c.dataset.id || "";
+        const name = c.dataset.name || "";
+        if (id.includes(term) || name.includes(term)) {
+          c.style.display = "block";
+        } else {
+          c.style.display = "none";
+        }
+      });
+    };
+
+    const openTx = (id) => {
+      state.activeTxId = id;
+      const u = state.accounts[id];
+      if (!u) return;
+      $("txStudentName").innerText = u.name;
+      $("txStudentId").innerText = id;
+      $("txStudentBalance").innerText = (u.balance || 0).toLocaleString();
+      $("txAmount").value = "";
+      showView("transactionView");
+    };
+
+    const performTx = async (type) => {
+      const id = state.activeTxId;
+      const u = state.accounts[id];
+      const amtText = $("txAmount").value;
+      const amt = parseFloat(amtText);
+
+      if (isNaN(amt) || amt <= 0) return showToast("ระบุจำนวนเงินให้ถูกต้อง", "error");
+
+      let newBalance = parseFloat(u.balance) || 0;
+      if (type === 'withdraw') {
+        if (amt > newBalance) return showToast("ยอดยืนไม่พอให้ถอน", "error");
+        newBalance -= amt;
+      } else {
+        newBalance += amt;
+      }
+
+      showLoader("กำลังบันทึก...");
+      try {
+        const histType = type === 'withdraw' ? 'ถอน' : 'ฝาก';
+        const dateStr = new Date().toLocaleDateString("th-TH");
+        const logEntry = `${histType} ${amt} บาท (โดย ${state.user.name}) (${dateStr})`;
+
+        const newHist = Array.isArray(u.history) ? [...u.history] : [];
+        newHist.unshift(logEntry);
+
+        await update(ref(db, `accounts/${id}`), {
+          balance: newBalance,
+          history: newHist
+        });
+
+        showToast(`ทำรายการ${histType} ${amt} บาท สำเร็จ!`, "success");
+        logAdminAction(type, { studentId: id, studentName: u.name, amount: amt });
+        backToAdmin();
+      } catch (err) {
+        showToast("เกิดข้อผิดพลาด", "error");
+        console.error(err);
+      } finally {
+        hideLoader();
+      }
+    };
+
+    const viewHistory = (id) => {
+      const u = state.accounts[id];
+      if (!u) return;
+      $("historyViewTitle").innerText = `ประวัติ: ${u.name} (${id})`;
+      $("searchSummaryBox").classList.add("hidden");
+
+      const ul = $("historyViewList");
+      ul.innerHTML = "";
+      (u.history || []).forEach(h => {
+        const li = document.createElement("li");
+        li.className = `history-item`;
+        li.innerHTML = `<span>${escapeHtml(h)}</span>`;
+        ul.appendChild(li);
+      });
+      showView("historyView");
+    };
+
+    const openEditHist = (id) => {
+      state.activeHistId = id;
+      const u = state.accounts[id];
+      $("editHistName").innerText = u.name;
+      $("editHistId").innerText = id;
+      $("editHistArea").value = (u.history || []).join("\n");
+      showView("editHistoryView");
+    };
+
+    const saveHistory = async () => {
+      const id = state.activeHistId;
+      const lines = $("editHistArea").value.split("\n").map(l => l.trim()).filter(l => l !== "");
+
+      showLoader();
+      try {
+        await update(ref(db, `accounts/${id}`), { history: lines });
+        showToast("บันทึกประวัติการแก้ไขสำเร็จ", "success");
+        logAdminAction("edit_history", { studentId: id });
+        backToAdmin();
+      } catch (e) {
+        showToast("เกิดข้อผิดพลาด", "error");
+      } finally { hideLoader(); }
+    };
+
+    const renameUser = (id) => {
+      const u = state.accounts[id];
+      if (!u) return;
+      state.pendingRenameId = id;
+      $("renameUserIdDisplay").innerText = id;
+      $("renameInput").value = u.name;
+      $("renameUserModal").classList.add("active");
+      setTimeout(() => $("renameInput").focus(), 100);
+    };
+
+    const executeRenameUser = async () => {
+      const id = state.pendingRenameId;
+      const u = state.accounts[id];
+      if (!u) return;
+      const newname = $("renameInput").value.trim();
+      if (!newname || newname === u.name) return $("renameUserModal").classList.remove("active");
+
+      $("renameUserModal").classList.remove("active");
+      showLoader();
+      try {
+        await update(ref(db, `accounts/${id}`), { name: newname });
+        showToast("แก้ไขชื่อสำเร็จ", "success");
+        logAdminAction("rename", { id, oldName: u.name, newName: newname });
+      } catch (e) { showToast("Error", "error"); } finally { hideLoader(); }
+    };
+
+    const deleteUser = (id) => {
+      if (!state.accounts[id]) return;
+      state.pendingDeleteUserId = id;
+      $("deleteUserIdDisplay").innerText = id;
+      $("confirmDeleteUserModal").classList.add("active");
+    };
+
+    const executeDeleteUser = async () => {
+      const id = state.pendingDeleteUserId;
+      if (!id) return;
+      $("confirmDeleteUserModal").classList.remove("active");
+
+      showLoader();
+      try {
+        await remove(ref(db, `accounts/${id}`));
+        showToast("ลบบัญชีสำเร็จ", "success");
+        logAdminAction("delete_account", { id });
+      } catch (e) { showToast("Error", "error"); } finally { hideLoader(); }
+    };
+
+    const showCreateAccount = () => {
+      $("regId").value = "";
+      $("regName").value = "";
+      showView("createAccountView");
+    };
+
+    const createAccount = async () => {
+      const id = $("regId").value.trim();
+      const name = $("regName").value.trim();
+      if (!id || !name) return showToast("กรุณากรอกให้ครบ", "error");
+      if (!isValidFirebaseKey(id)) return showToast("รหัสไม่ถูกต้อง ห้ามมีอักขระพิเศษ (.#$[]/)", "error");
+
+      showLoader();
+      try {
+        const s1 = await get(ref(db, `accounts/${id}`));
+        if (s1.exists()) throw new Error("ID นี้ถูกใช้ไปแล้ว");
+
+        await set(ref(db, `accounts/${id}`), { name, balance: 0, history: [] });
+        showToast(`สร้างบัญชี ${name} สำเร็จ`, "success");
+        logAdminAction("create_account", { id, name });
+        backToAdmin();
+      } catch (e) {
+        showToast(e.message, "error");
+      } finally { hideLoader(); }
+    };
+
+    // --- Search & Reporting ---
+    const searchByDate = () => {
+      const raw = $("searchDateInput").value;
+      if (!raw) return showToast("กรุณาเลือกวันที่", "error");
+      const [y, m, d] = raw.split("-");
+      const searchStr = `${parseInt(d)}/${parseInt(m)}/${parseInt(y) + 543}`;
+
+      let tDep = 0, tWit = 0;
+      const ul = $("historyViewList");
+      ul.innerHTML = "";
+
+      Object.entries(state.accounts).forEach(([id, u]) => {
+        (u.history || []).forEach(h => {
+          const dMatch = h.match(/\((\d{1,2}\/\d{1,2}\/\d{4})\)/);
+          if (dMatch && dMatch[1] === searchStr) {
+            const li = document.createElement("li");
+            li.className = "history-item";
+            li.innerHTML = `<div><strong>${escapeHtml(u.name)} (${id})</strong><br><small>${escapeHtml(h)}</small></div>`;
+            ul.appendChild(li);
+
+            const mMatch = h.match(/(ฝาก|ถอน)\s+([\d,.]+)\s+บาท/);
+            if (mMatch) {
+              const amt = parseFloat(mMatch[2].replace(/,/g, ""));
+              if (mMatch[1] === "ฝาก") tDep += amt;
+              if (mMatch[1] === "ถอน") tWit += amt;
+            }
+          }
+        });
+      });
+
+      $("historyViewTitle").innerText = `ผลลัพธ์วันที่: ${searchStr}`;
+      $("searchTotalDeposit").innerText = tDep.toLocaleString("th-TH", { minimumFractionDigits: 2 });
+      $("searchTotalWithdraw").innerText = tWit.toLocaleString("th-TH", { minimumFractionDigits: 2 });
+      $("searchSummaryBox").classList.remove("hidden");
+
+      showView("historyView");
+    };
+
+    const promptCalculateInterest = () => {
+      $("calcInterestPct").value = "";
+      showView("calculateInterestView");
+    };
+
+    const performCalculateInterest = () => {
+      const pctText = $("calcInterestPct").value.trim();
+      if (!pctText) return showToast("กรุณาระบุเปอร์เซ็นต์ดอกเบี้ย", "error");
+      const pct = parseFloat(pctText);
+      if (isNaN(pct) || pct <= 0) return showToast("รูปแบบเปอร์เซ็นต์ไม่ถูกต้อง", "error");
+
+      state.pendingInterestPct = pct;
+      $("confirmInterestPctDisplay").innerText = pct;
+      $("confirmInterestModal").classList.add("active");
+    };
+
+    const executeCalculateInterest = async () => {
+      $("confirmInterestModal").classList.remove("active");
+      const pct = state.pendingInterestPct;
+      if (!pct) return;
+
+      showLoader("กำลังคำนวณ...");
+      const dateStr = new Date().toLocaleDateString("th-TH");
+      let cnt = 0;
+      try {
+        const updatePromises = [];
+        for (let id in state.accounts) {
+          let u = state.accounts[id];
+          let bal = parseFloat(u.balance) || 0;
+          if (bal > 0) {
+            let intr = Math.round(bal * (pct / 100) * 100) / 100;
+            let newHist = Array.isArray(u.history) ? [...u.history] : [];
+
+            // Remove old interest history entries if we want to replace
+            newHist = newHist.filter(entry => !entry.startsWith("รีเซ็ตดอกเบี้ยใหม่") && !entry.startsWith("ดอกเบี้ย"));
+
+            // We will keep old history to prevent data loss, just add a new "Replace Interest" entry
+            newHist.unshift(`รีเซ็ตดอกเบี้ยใหม่เป็น ${intr} บาท (${pct}%) (${dateStr})`);
+
+            updatePromises.push(update(ref(db, `accounts/${id}`), {
+              interest: intr, // Replace instead of accumulate
+              history: newHist
+            }));
+            cnt++;
+          }
+        }
+        if (updatePromises.length > 0) {
+          await Promise.all(updatePromises);
+        }
+        showToast(`เพิ่มดอกเบี้ย ${pct}% ให้ ${cnt} บัญชีสำเร็จ`, "success");
+        logAdminAction("calculate_interest", { percentage: pct, accountsAffected: cnt });
+        backToAdmin();
+      } catch (e) {
+        console.error(e);
+        showToast("Error", "error");
+      } finally { hideLoader(); }
+    };
+
+    // --- Head Admin Specifics ---
+    const showCreateAdmin = () => {
+      $("regAdminId").value = "";
+      $("regAdminName").value = "";
+      $("regAdminRole").value = "staff";
+      showView("createAdminView");
+    };
+
+    const createAdmin = async () => {
+      const id = $("regAdminId").value.trim();
+      const name = $("regAdminName").value.trim();
+      const role = $("regAdminRole").value;
+
+      if (!id || !name) return showToast("กรุณากรอกให้ครบทุกช่อง", "error");
+      if (!isValidFirebaseKey(id)) return showToast("รหัสไม่ถูกต้อง ห้ามมีอักขระพิเศษ (.#$[]/)", "error");
+
+      showLoader();
+      try {
+        const res = await get(ref(db, `admins/${id}`));
+        if (res.exists()) {
+          hideLoader();
+          return showToast("ID นี้เป็นแอดมินหรือสตาฟอยู่แล้ว", "error");
+        }
+
+        await set(ref(db, `admins/${id}`), { name: name, role: role });
+        showToast(`เพิ่มบัญชีผู้ดูแล (${role}) สำเร็จ`, "success");
+        logAdminAction("create_admin_staff", { newId: id, role: role, name: name });
+        backToAdmin();
+      } catch (e) {
+        showToast("Error", "error");
+      } finally {
+        hideLoader();
+      }
+    };
+
+    const renderAdminAdminList = () => {
+      const g = $("adminAdminList");
+      if (!g) return;
+      g.innerHTML = "";
+      Object.entries(state.admins).forEach(([id, a]) => {
+        const card = document.createElement("div");
+        card.className = "user-card";
+        card.innerHTML = `
+           <div class="user-card__header">
+             <div class="user-card__info">
+               <div class="user-card__name">${escapeHtml(a.name || "Admin")}</div>
+               <div class="user-card__id">ID: ${escapeHtml(id)} | บทบาท: ${escapeHtml(a.role)}</div>
+             </div>
+             ${(id !== HEAD_ADMIN_ID && state.user.id === HEAD_ADMIN_ID) ?
+            `<button class="button button--danger" style="padding: 6px 12px;" onclick="window.wisa.deleteAdmin('${escapeAttr(id)}')">ลบ</button>` : ''}
+           </div>
+         `;
+        g.appendChild(card);
+      });
+    };
+
+    const deleteAdmin = (id) => {
+      state.pendingDeleteAdminId = id;
+      $("deleteAdminIdDisplay").innerText = id;
+      $("confirmDeleteAdminModal").classList.add("active");
+    }
+
+    const executeDeleteAdmin = async () => {
+      const id = state.pendingDeleteAdminId;
+      if (!id) return;
+      $("confirmDeleteAdminModal").classList.remove("active");
+
+      showLoader();
+      try {
+        await remove(ref(db, `admins/${id}`));
+        showToast("ลบแอดมินสำเร็จ", "success");
+      } catch (e) { showToast("Error", "error"); } finally { hideLoader(); }
+    }
+
+    const renderAdminLogs = () => {
+      const fId = $("adminLogIdFilter").value;
+      const fDt = $("adminLogDateFilter").value;
+      const ul = $("adminLogsList");
+      ul.innerHTML = "";
+
+      let allowedLogs = Object.values(state.adminLogs);
+      if (state.user?.role === 'admin') {
+        // Admin can only see staff logs
+        allowedLogs = allowedLogs.filter(l => l.adminRole === 'staff');
+      } else if (state.user?.role === 'staff') {
+        // Staff shouldn't even be here, but just in case
+        allowedLogs = [];
+      }
+
+      // Populate dropdown if not done
+      const idSel = $("adminLogIdFilter");
+      if (idSel.options.length === 0) {
+        idSel.add(new Option("ทั้งหมด", ""));
+        const ids = new Set(allowedLogs.map(l => l.adminId));
+        ids.forEach(id => idSel.add(new Option(id, id)));
+      }
+
+      const logsArr = allowedLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      logsArr.forEach(l => {
+        if (fId && l.adminId !== fId) return;
+        if (fDt && l.timestamp.split("T")[0] !== fDt) return;
+
+        const li = document.createElement("li");
+        li.className = "history-item";
+        li.style.flexDirection = "column";
+        li.style.alignItems = "flex-start";
+        li.innerHTML = `
+             <strong>${escapeHtml(new Date(l.timestamp).toLocaleString("th-TH"))} | ${escapeHtml(l.adminRole || 'admin')}: ${escapeHtml(l.adminId)}</strong>
+             <span style="color:var(--info-color)">Action: ${escapeHtml(l.actionType)}</span>
+             <small style="color:var(--text-muted)">Details: ${escapeHtml(JSON.stringify(l.details))}</small>
+           `;
+        ul.appendChild(li);
+      });
+    };
+
+    const promptClearDB = () => {
+      const h = new Date().getHours();
+      const m = new Date().getMinutes();
+      state.mathAnswer = (h + 3) * 2 - m;
+      $("mathQuestion").innerText = `สมการยืนยัน: (${h} + 3) * 2 - ${m} = ?`;
+      $("mathHint").innerText = `เวลาอ้างอิง: ${h}:${m}`;
+      $("mathAnswer").value = "";
+      $("mathModal").classList.add("active");
+    };
+
+    const confirmClearDB = async () => {
+      if (parseInt($("mathAnswer").value) !== state.mathAnswer) return showToast("คำตอบผิด", "error");
+
+      $("mathModal").classList.remove("active");
+      showLoader("กำลังลบข้อมูล...");
+      try {
+        await remove(ref(db, "accounts"));
+        await remove(ref(db, "admin_logs"));
+        showToast("รีเซ็ตระบบทั้งหมดสำเร็จ", "success");
+        logAdminAction("clear_database", {});
+      } catch (e) { showToast("Error", "error"); } finally { hideLoader(); }
+    };
+
+    const closeModal = (id) => $(id).classList.remove("active");
+
+    // --- Reset Interest ---
+    const resetInterestPrompt = () => {
+      $("confirmResetInterestModal").classList.add("active");
+    };
+
+    const executeResetInterest = async () => {
+      $("confirmResetInterestModal").classList.remove("active");
+      showLoader("กำลังรีเซ็ตดอกเบี้ย...");
+      let cnt = 0;
+      try {
+        const updatePromises = [];
+        for (let id in state.accounts) {
+          let u = state.accounts[id];
+          let newHist = Array.isArray(u.history) ? [...u.history] : [];
+          // Remove old interest history entries
+          newHist = newHist.filter(entry => !entry.startsWith("รีเซ็ตดอกเบี้ยใหม่") && !entry.startsWith("ดอกเบี้ย"));
+          updatePromises.push(update(ref(db, `accounts/${id}`), {
+            interest: 0,
+            history: newHist
+          }));
+          cnt++;
+        }
+        if (updatePromises.length > 0) {
+          await Promise.all(updatePromises);
+        }
+        showToast(`รีเซ็ตดอกเบี้ยสำเร็จ ${cnt} บัญชี`, "success");
+        logAdminAction("reset_interest", { accountsAffected: cnt });
+      } catch (e) {
+        console.error(e);
+        showToast("Error", "error");
+      } finally { hideLoader(); }
+    };
+
+    // Excel Export (Reusing external library)
+    window.exportAllAccountsToExcel = async () => {
+      showLoader("กำลังเตรียมไฟล์...");
+      try {
+        const snap = await get(ref(db, "accounts"));
+        const accounts = snap.val() || {};
+        const workbook = XLSX.utils.book_new();
+
+        const sortedIds = Object.keys(accounts).sort();
+        const now = new Date();
+        const thaiMonth = now.toLocaleDateString("th-TH", { month: "long" });
+        const thaiYear = now.toLocaleDateString("th-TH", { year: "numeric" });
+        const wsData = [
+          ["บันทึกบัญชี รายรับ - รายจ่าย", "", "", ""],
+          [`ธนาคารโรงเรียนวิศานุสรณ์`, "", `วันที่ส่งออก: ${now.toLocaleDateString("th-TH")}`, ""],
+          [`เดือน: ${thaiMonth}`, "", `ปี: ${thaiYear}`, ""],
+          [],
+        ];
+
+        let grandTotal = 0;
+        for (const id of sortedIds) {
+          const account = accounts[id];
+          const balance = account.balance || 0;
+          const interest = account.interest || 0;
+          const total = balance + interest;
+          grandTotal += total;
+
+          wsData.push([`ชื่อ: ${account.name}`, `รหัส: ${id}`, `ยอดเงินฝาก: ${balance}`, `ดอกเบี้ยสะสม: ${interest}`, `ยอดเงินรวม: ${total}`]);
+          wsData.push(["วันที่", "รายการ", "รายรับ", "ยอดเงินฝากสะสม"]);
+
+          let runningBalance = 0;
+          const entries = Array.isArray(account.history) ? [...account.history].reverse() : [];
+          for (const entry of entries) {
+            const dateMatch = entry.match(/\((\d{1,2}\/\d{1,2}\/\d{4})\)/);
+            const date = dateMatch ? dateMatch[1] : "-";
+            const amtMatch = entry.match(/(ฝาก|ถอน|ดอกเบี้ย|รีเซ็ตดอกเบี้ยใหม่เป็น)\s+([\d,.]+)\s+บาท/);
+            if (amtMatch) {
+              const type = amtMatch[1];
+              const amt = parseFloat(amtMatch[2].replace(/,/g, ""));
+              if (type === 'ถอน') {
+                runningBalance -= amt;
+                wsData.push([date, entry, -amt, runningBalance]);
+              } else if (type === 'ฝาก') {
+                runningBalance += amt;
+                wsData.push([date, entry, amt, runningBalance]);
+              } else {
+                // Interest log (either old 'ดอกเบี้ย' or new 'รีเซ็ตดอกเบี้ยใหม่เป็น')
+                wsData.push([date, entry, amt, runningBalance]);
+              }
+            }
+          }
+          wsData.push(["", "ยอดรวมบัญชีนี้", "", balance]);
+          wsData.push([]);
+        }
+        wsData.push(["", "ยอดรวมทั้งระบบ", grandTotal, ""]);
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        XLSX.utils.book_append_sheet(workbook, ws, "บันทึกบัญชี");
+        XLSX.writeFile(workbook, `บัญชีทั้งหมด_${now.getTime()}.xlsx`);
+        showToast("ส่งออกสำเร็จ!", "success");
+        logAdminAction("export_all", {});
+      } catch (e) {
+        showToast("Error", "error");
+      } finally { hideLoader(); }
+    };
+
+    // Attach to window so HTML inline onclicks work
+    window.wisa = {
+      login, logout, backToAdmin,
+      showCreateAccount, createAccount, showCreateAdmin, createAdmin,
+      openTx, performTx, viewHistory, openEditHist, saveHistory, renameUser, executeRenameUser, deleteUser, executeDeleteUser,
+      searchByDate, promptCalculateInterest, performCalculateInterest, executeCalculateInterest, filterUserList,
+      deleteAdmin, executeDeleteAdmin, renderAdminLogs,
+      showView, promptClearDB, confirmClearDB, closeModal,
+      resetInterestPrompt, executeResetInterest
+    };
+
+    // Global Keydown Listener for Enter Key
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const mathModal = $("mathModal");
+        const confirmInterestModal = $("confirmInterestModal");
+        const renameUserModal = $("renameUserModal");
+        const confirmDeleteUserModal = $("confirmDeleteUserModal");
+        const confirmDeleteAdminModal = $("confirmDeleteAdminModal");
+
+        // Modals take priority
+        if (mathModal && mathModal.classList.contains("active")) {
+          e.preventDefault();
+          window.wisa.confirmClearDB();
+          return;
+        }
+        if (confirmInterestModal && confirmInterestModal.classList.contains("active")) {
+          e.preventDefault();
+          window.wisa.executeCalculateInterest();
+          return;
+        }
+        if (renameUserModal && renameUserModal.classList.contains("active")) {
+          e.preventDefault();
+          window.wisa.executeRenameUser();
+          return;
+        }
+        if (confirmDeleteUserModal && confirmDeleteUserModal.classList.contains("active")) {
+          e.preventDefault();
+          window.wisa.executeDeleteUser();
+          return;
+        }
+        if (confirmDeleteAdminModal && confirmDeleteAdminModal.classList.contains("active")) {
+          e.preventDefault();
+          window.wisa.executeDeleteAdmin();
+          return;
+        }
+        const confirmResetInterestModal = $("confirmResetInterestModal");
+        if (confirmResetInterestModal && confirmResetInterestModal.classList.contains("active")) {
+          e.preventDefault();
+          window.wisa.executeResetInterest();
+          return;
+        }
+
+        // Check active views
+        if (!$("loginView").classList.contains("hidden")) {
+          e.preventDefault();
+          window.wisa.login();
+        } else if (!$("transactionView").classList.contains("hidden")) {
+          // Default to deposit on enter in transaction view
+          e.preventDefault();
+          window.wisa.performTx('deposit');
+        } else if (!$("createAccountView").classList.contains("hidden")) {
+          e.preventDefault();
+          window.wisa.createAccount();
+        } else if (!$("createAdminView").classList.contains("hidden")) {
+          e.preventDefault();
+          window.wisa.createAdmin();
+        } else if (!$("calculateInterestView").classList.contains("hidden")) {
+          e.preventDefault();
+          window.wisa.performCalculateInterest();
+        } else if (!$("editHistoryView").classList.contains("hidden")) {
+          // Don't auto-submit textareas unless we really want to, but here we can
+          if (document.activeElement.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            window.wisa.saveHistory();
+          }
+        }
+      }
+    });
+
+  </script>
+</body>
+
 </html>

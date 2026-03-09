@@ -33,7 +33,7 @@
     <header class="app-header">
       <h1>ธนาคารโรงเรียนวิศานุสรณ์</h1>
       <p>ระบบจัดการบัญชีและธุรกรรม</p>
-      <div class="app-version">Version 3.0.1</div>
+      <div class="app-version">Version 3.2.2</div>
     </header>
 
     <!-- VIEWS -->
@@ -341,6 +341,32 @@
     </div>
   </div>
 
+  <!-- MODAL FOR EDIT ADMIN -->
+  <div id="editAdminModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>✏️ แก้ไขข้อมูลผู้ดูแล</h2>
+      <p class="mb-4 text-muted">กำลังแก้ไขข้อมูลของรหัส <strong id="editAdminIdDisplay"></strong></p>
+
+      <div class="input-group">
+        <label>ชื่อ-นามสกุล:</label>
+        <input type="text" id="editAdminName" class="input-field" placeholder="ใส่ชื่อใหม่ที่ต้องการ" />
+      </div>
+      <div class="input-group">
+        <label>บทบาท (Role):</label>
+        <select id="editAdminRole" class="input-field"
+          style="background:#0f172a; color:#f8fafc; padding: 12px; border-radius: 8px;">
+          <option value="staff">Staff (ฝากถอนได้ ค้นหาประวัติเด็กได้)</option>
+          <option value="admin">Admin (คุม Staff ได้ ดูประวัติ Staff ได้)</option>
+        </select>
+      </div>
+
+      <div class="button-group">
+        <button class="button button--warning" onclick="window.wisa.executeEditAdmin()">บันทึกการแก้ไข</button>
+        <button class="button button--secondary" onclick="window.wisa.closeModal('editAdminModal')">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL FOR RESET INTEREST CONFIRMATION -->
   <div id="confirmResetInterestModal" class="modal-overlay">
     <div class="modal-content">
@@ -485,7 +511,10 @@
           state.admins = snap.val() || {};
           renderAdminAdminList();
         });
+      }
 
+      // Fetch Logs if head or admin
+      if (state.user?.role === 'headadmin' || state.user?.role === 'admin') {
         onValue(ref(db, "admin_logs"), (snap) => {
           state.adminLogs = snap.val() || {};
         });
@@ -913,11 +942,76 @@
                <div class="user-card__id">ID: ${escapeHtml(id)} | บทบาท: ${escapeHtml(a.role)}</div>
              </div>
              ${(id !== HEAD_ADMIN_ID && state.user.id === HEAD_ADMIN_ID) ?
-            `<button class="button button--danger" style="padding: 6px 12px;" onclick="window.wisa.deleteAdmin('${escapeAttr(id)}')">ลบ</button>` : ''}
+            `<div style="display: flex; gap: 8px;"><button class="button button--info" style="padding: 6px 12px;" onclick="window.wisa.viewAdminHistory('${escapeAttr(id)}')">ดูประวัติ</button><button class="button button--warning" style="padding: 6px 12px;" onclick="window.wisa.editAdmin('${escapeAttr(id)}')">แก้ไข</button><button class="button button--danger" style="padding: 6px 12px;" onclick="window.wisa.deleteAdmin('${escapeAttr(id)}')">ลบ</button></div>` : ''}
            </div>
          `;
         g.appendChild(card);
       });
+    };
+
+    const viewAdminHistory = (id) => {
+      const a = state.admins[id] || { name: id === HEAD_ADMIN_ID ? "Head Admin" : "Unknown Admin" };
+
+      $("historyViewTitle").innerText = `ประวัติผู้ดูแล: ${a.name} (${id})`;
+      $("searchSummaryBox").classList.add("hidden");
+
+      const ul = $("historyViewList");
+      ul.innerHTML = "";
+
+      let myLogs = Object.values(state.adminLogs).filter(l => l.adminId === id);
+      myLogs.sort((x, y) => new Date(y.timestamp) - new Date(x.timestamp));
+
+      myLogs.forEach(l => {
+        const li = document.createElement("li");
+        li.className = `history-item`;
+        li.style.flexDirection = "column";
+        li.style.alignItems = "flex-start";
+        const dateStr = new Date(l.timestamp).toLocaleString("th-TH");
+        let detailsStr = "";
+        if (l.details) {
+          try {
+            detailsStr = Object.entries(l.details).map(([k, v]) => `${k}: ${v}`).join(", ");
+          } catch (e) { }
+        }
+        li.innerHTML = `<div><strong>${escapeHtml(dateStr)}</strong></div>
+                        <div style="color:var(--info-color); margin-top: 4px;">การกระทำ: ${escapeHtml(l.actionType)}</div>
+                        <div style="color:var(--text-muted); font-size: 0.8rem; margin-top: 2px;">รายละเอียด: ${escapeHtml(detailsStr)}</div>`;
+        ul.appendChild(li);
+      });
+
+      if (myLogs.length === 0) {
+        ul.innerHTML = `<li class="history-item"><span style="color:var(--c3);">ไม่มีประวัติการทำรายการ</span></li>`;
+      }
+
+      showView("historyView");
+    };
+
+    const editAdmin = (id) => {
+      const a = state.admins[id];
+      if (!a) return;
+      state.pendingEditAdminId = id;
+      $("editAdminIdDisplay").innerText = id;
+      $("editAdminName").value = a.name || "";
+      $("editAdminRole").value = a.role || "staff";
+      $("editAdminModal").classList.add("active");
+    };
+
+    const executeEditAdmin = async () => {
+      const id = state.pendingEditAdminId;
+      if (!id) return;
+
+      const newName = $("editAdminName").value.trim();
+      const newRole = $("editAdminRole").value;
+
+      if (!newName) return showToast("กรุณากรอกชื่อ", "error");
+
+      $("editAdminModal").classList.remove("active");
+      showLoader("กำลังบันทึก...");
+      try {
+        await update(ref(db, `admins/${id}`), { name: newName, role: newRole });
+        showToast("แก้ไขแอดมินสำเร็จ", "success");
+        logAdminAction("edit_admin_staff", { targetId: id, newName, newRole });
+      } catch (e) { showToast("Error", "error"); } finally { hideLoader(); }
     };
 
     const deleteAdmin = (id) => {
@@ -998,12 +1092,17 @@
         for (let logId in state.adminLogs) {
           updatePromises.push(remove(ref(db, `admin_logs/${logId}`)));
         }
+        for (let adminId in state.admins) {
+          if (adminId !== state.user.id && adminId !== HEAD_ADMIN_ID) {
+            updatePromises.push(remove(ref(db, `admins/${adminId}`)));
+          }
+        }
         await Promise.all(updatePromises);
-        showToast("รีเซ็ตระบบทั้งหมดสำเร็จ", "success");
+        showToast("ล้างข้อมูลทั้งหมด และแอดมินสำเร็จ", "success");
         logAdminAction("clear_database", {});
-      } catch (e) { 
+      } catch (e) {
         console.error(e);
-        showToast("Error: " + (e.message || ""), "error"); 
+        showToast("Error: " + (e.message || ""), "error");
       } finally { hideLoader(); }
     };
 
@@ -1116,7 +1215,8 @@
       searchByDate, promptCalculateInterest, performCalculateInterest, executeCalculateInterest, filterUserList,
       deleteAdmin, executeDeleteAdmin, renderAdminLogs,
       showView, promptClearDB, confirmClearDB, closeModal,
-      resetInterestPrompt, executeResetInterest
+      resetInterestPrompt, executeResetInterest,
+      editAdmin, executeEditAdmin, viewAdminHistory
     };
 
     // Global Keydown Listener for Enter Key
@@ -1192,4 +1292,3 @@
 </body>
 
 </html>
-

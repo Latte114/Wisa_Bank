@@ -260,17 +260,17 @@
 
   </div>
 
-  <!-- MODAL FOR CLEAR DB MATH CHALLENGE -->
+  <!-- MODAL FOR CLEAR DB CHALLENGE -->
   <div id="mathModal" class="modal-overlay">
     <div class="modal-content">
       <h2 style="color: var(--danger-hover);">⚠️ ยืนยันการล้างข้อมูล</h2>
       <p class="mb-4 text-muted">การกระทำนี้จะลบข้อมูลบัญชีและประวัติ<strong>ทั้งหมดอย่างถาวร</strong></p>
       <div class="math-challenge">
-        <strong id="mathQuestion" style="font-size: 1.2rem;"></strong>
-        <p id="mathHint" class="text-muted mt-2" style="font-size: 0.9rem; margin:0;"></p>
+        <strong id="mathQuestion" style="font-size: 1.1rem; color: #fff;">พิมพ์คำว่า DELETED เพื่อยืนยัน</strong>
+        <p id="mathHint" class="text-muted mt-2" style="font-size: 0.85rem; margin:0;">* ตัวพิมพ์ใหญ่ทั้งหมด</p>
       </div>
       <div class="input-group">
-        <input type="number" id="mathAnswer" class="input-field" placeholder="ใส่คำตอบตัวเลขที่นี่" />
+        <input type="text" id="mathAnswer" class="input-field" placeholder="DELETED" />
       </div>
       <div class="button-group">
         <button class="button button--danger" onclick="window.wisa.confirmClearDB()">ลบข้อมูลทั้งหมด</button>
@@ -980,17 +980,13 @@
     };
 
     const promptClearDB = () => {
-      const h = new Date().getHours();
-      const m = new Date().getMinutes();
-      state.mathAnswer = (h + 3) * 2 - m;
-      $("mathQuestion").innerText = `สมการยืนยัน: (${h} + 3) * 2 - ${m} = ?`;
-      $("mathHint").innerText = `เวลาอ้างอิง: ${h}:${m}`;
       $("mathAnswer").value = "";
       $("mathModal").classList.add("active");
+      setTimeout(() => $("mathAnswer").focus(), 100);
     };
 
     const confirmClearDB = async () => {
-      if (parseInt($("mathAnswer").value) !== state.mathAnswer) return showToast("คำตอบผิด", "error");
+      if ($("mathAnswer").value.trim() !== "DELETED") return showToast("พิมพ์ข้อความไม่ถูกต้อง", "error");
 
       $("mathModal").classList.remove("active");
       showLoader("กำลังลบข้อมูล...");

@@ -999,12 +999,6 @@
           updatePromises.push(remove(ref(db, `admin_logs/${logId}`)));
         }
         await Promise.all(updatePromises);
-        
-        try {
-          await remove(ref(db, "accounts"));
-          await remove(ref(db, "admin_logs"));
-        } catch (ignored) {} // Ignore root remove errors if permission denied
-
         showToast("รีเซ็ตระบบทั้งหมดสำเร็จ", "success");
         logAdminAction("clear_database", {});
       } catch (e) { 

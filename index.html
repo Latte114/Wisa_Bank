@@ -991,11 +991,26 @@
       $("mathModal").classList.remove("active");
       showLoader("กำลังลบข้อมูล...");
       try {
-        await remove(ref(db, "accounts"));
-        await remove(ref(db, "admin_logs"));
+        const updatePromises = [];
+        for (let id in state.accounts) {
+          updatePromises.push(remove(ref(db, `accounts/${id}`)));
+        }
+        for (let logId in state.adminLogs) {
+          updatePromises.push(remove(ref(db, `admin_logs/${logId}`)));
+        }
+        await Promise.all(updatePromises);
+        
+        try {
+          await remove(ref(db, "accounts"));
+          await remove(ref(db, "admin_logs"));
+        } catch (ignored) {} // Ignore root remove errors if permission denied
+
         showToast("รีเซ็ตระบบทั้งหมดสำเร็จ", "success");
         logAdminAction("clear_database", {});
-      } catch (e) { showToast("Error", "error"); } finally { hideLoader(); }
+      } catch (e) { 
+        console.error(e);
+        showToast("Error: " + (e.message || ""), "error"); 
+      } finally { hideLoader(); }
     };
 
     const closeModal = (id) => $(id).classList.remove("active");
